@@ -1,5 +1,3 @@
-package Particles;
-
 import java.awt.EventQueue;
 import java.awt.Toolkit;
 

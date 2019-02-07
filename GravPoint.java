@@ -1,5 +1,3 @@
-package Particles;
-
 public class GravPoint {
 	private double x;
 	private double y;
