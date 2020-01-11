@@ -1,1 +1,6 @@
 *.class
+
+# IntelliJ files
+.idea
+*.iml
+out
