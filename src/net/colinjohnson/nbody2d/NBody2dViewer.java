@@ -7,8 +7,8 @@ import java.awt.event.*;
 import java.awt.geom.Point2D;
 
 /**
- * Application to display and manipulates a 2-dimensional n-body simulation (nbody2d.NBody2d). A
- * window will be created immediately upon instantiation.
+ * Application to display and manipulates a 2-dimensional n-body simulation (NBody2d). A window
+ * will be created immediately upon instantiation.
  *
  * @Author Colin Johnson
  */
@@ -19,6 +19,10 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
     private boolean fullScreen = false; // is the viewer full screen currently?
     private double scale;               // simulation meters per on-screen pixel
     private boolean ready = false;      // is the viewer ready to display graphics?
+
+    boolean isPanning = false;          // is the user currently panning? (right mouse button)
+    int panX = 0;                      // the vertical distance the user has panned
+    int panY = 0;                      // the horizontal distance the user has panned
 
     /**
      * NBody2dViewer Constructor. Creates and configures display panel.
@@ -39,11 +43,11 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 createAndShowGUI(false);
+
+                // set initial scale now that the screen size is known
+                setScaleToFit();
             }
         });
-
-        // set initial scale s.t. the whole simulated area is on screen
-        scale = 1;
     }
 
     /**
@@ -82,6 +86,23 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
     }
 
     /**
+     * Calculates the scale required fit the whole simulation space within the current window size.
+     */
+    public double getScaleToFit() {
+        double constraint = Math.min(frame.getWidth(), frame.getHeight());
+        double boundary = sim.getBoundary();
+        return (boundary * 2) / constraint;
+    }
+
+    /**
+     * Resets the scale and pan to fit the whole simulation space within the current window size.
+     */
+    public void setScaleToFit() {
+        scale = getScaleToFit();
+        panX = panY = 0;
+    }
+
+    /**
      * Converts an x or y coordinate from the simulation to pixels using scale, for visualization.
      *
      * @param simCoordinate the coordinate in the simulation
@@ -92,8 +113,8 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
 
         Point origin = pixelOrigin();
 
-        int pixelX = origin.x + (int)(simCoordinate.getX() / scale);
-        int pixelY = origin.y + (int)(simCoordinate.getY() / scale);
+        int pixelX = origin.x + panX + (int)(simCoordinate.getX() / scale);
+        int pixelY = origin.y + panY + (int)(simCoordinate.getY() / scale);
 
         return new Point(pixelX, pixelY);
     }
@@ -104,7 +125,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
      * @param distance the distance, in meters, from the simulation
      * @return a distance in pixels
      */
-    private int toPixels(double distance) {
+    private int distanceToPixels(double distance) {
         Long pixelDistance = Math.round(distance / scale);
 
         if (Math.abs(pixelDistance) > Integer.MAX_VALUE) {
@@ -129,14 +150,29 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
 
         // draw debug info
         g.setColor(Color.WHITE);
-        g.drawString("tracking " + sim.getN() + " particles", 20, 40);
+        g.drawString("tracked particles: " + sim.getN(), 20, 40);
+        g.drawString(String.format("scale: %.2e meters / pixel", scale), 20, 55);
+
+        long n = sim.getTimeElapsed();
+        long years = n / (365 * 24 * 3600);
+        n = n % (365 * 24 * 3600);
+        long days = n / (24 * 3600);
+        n = n % (24 * 3600);
+        long hours = n / 3600;
+        n %= 3600;
+        long minutes = n / 60 ;
+        n %= 60;
+        long seconds = n;
+        g.drawString("sim time elapsed: " + years + " years " + days + " days " + hours
+                + " hours " + minutes + " minutes " + seconds + " seconds ", 20, 70);
 
         // draw border circle
-        Point origin = pixelOrigin();
-        drawCircle(g, (int)origin.getX(), (int)origin.getY(), (int)(sim.getBoundary() / scale));
+        Point center = pointToPixels(new Point2D.Double(0,0));
+        drawCircle(g, (int)center.getX(), (int)center.getY(), distanceToPixels(sim.getBoundary()));
 
         for (Body2d body : sim.getBodies()) {
             Point drawLocation = pointToPixels(new Point2D.Double(body.x, body.y));
+            g.setColor(body.color);
             drawCircle(g, (int)drawLocation.getX(), (int)drawLocation.getY(), 1);
         }
     }
@@ -156,11 +192,10 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
 
     /**
      * Get the location, in pixels from the top-left of the window, where the origin of the
-     * simulation should be drawn.
+     * simulation should be drawn assuming the user hasn't panned (panX = panY = 0).
      */
     private Point pixelOrigin() {
-        //TODO: this is not the final logic (will depend on translation of the view area)
-        return new Point(this.getWidth()/2, this.getHeight()/2);
+        return new Point(this.getWidth() / 2, this.getHeight() / 2);
     }
 
     private Point windowCenter() {
@@ -221,6 +256,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
 
         } else if (e.getButton() == MouseEvent.BUTTON2) {
             System.out.println("button 2");
+            setScaleToFit();
 
         } else if (e.getButton() == MouseEvent.BUTTON3){
             System.out.println("button 3");
@@ -297,8 +333,17 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
         } else if (e.getKeyCode() == KeyEvent.VK_DELETE) {
             System.out.println("'delete' pressed");
 
-        } else if (e.getKeyCode() == KeyEvent.VK_R) {
-            System.out.println("'R' pressed");
+        } else if (e.getKeyCode() == KeyEvent.VK_UP) {
+            panY += 20;
+
+        } else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+            panY -= 20;
+
+        } else if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+            panX += 20;
+
+        } else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+            panX -= 20;
 
         } else if (e.getKeyCode() == KeyEvent.VK_F11) {
             System.out.println("'f11' pressed");
@@ -324,15 +369,12 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
         double rotation = e.getPreciseWheelRotation();
-        scale += rotation * 0.1;
+        double newScale = scale + (getScaleToFit() / 10) * rotation;
+        if (newScale > 0) scale = newScale;
         System.out.println("mouse wheel event: " + rotation + ", new scale: " + scale);
     }
 
     public boolean isReady() {
         return ready;
-    }
-
-    public void setReady(boolean ready) {
-        this.ready = ready;
     }
 }

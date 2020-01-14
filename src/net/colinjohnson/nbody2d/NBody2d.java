@@ -1,5 +1,9 @@
 package net.colinjohnson.nbody2d;
 
+import javax.swing.*;
+import java.util.Timer;
+import java.util.TimerTask;
+
 /**
  * A simple brute-force 2-dimensional n-body simulation using Newtonian Gravity.
  *
@@ -17,7 +21,14 @@ public class NBody2d {
     private int n;              // the number of bodies being simulated
     private Body2d[] bodies;    // Array of bodies
     private double boundary;    // the edge of this simulation's "universe"
+
+    // simulation timing
     private double dt;          // the amount of simulated time between steps (seconds)
+    boolean  autoStep;          // true when the simulation is automatically calling step();
+    java.util.Timer timer;      // timer for autoStep()
+
+    // simulation trackers
+    private long timeElapsed;   // the amount of simulated time that has passed so far (seconds)
 
     /**
      * Main method which creates and configures an nbody2d.NBody2d simulation.
@@ -25,12 +36,8 @@ public class NBody2d {
      */
     public static void main(String[] args) {
 
-        //TODO: use multiple cores?
-        //int cores = Runtime.getRuntime().availableProcessors();
-        //System.out.println("Starting simulation using " + cores + " cores.");
-
         // get 'n' from command line parameter, if one exists, otherwise use default value
-        int n = 100;
+        int n = 500;
         if (args.length > 0) {
             try {
                 n = Integer.parseInt(args[0]);
@@ -41,30 +48,23 @@ public class NBody2d {
         System.out.format("Starting simulation with n=%d bodies\n", n);
 
         // create and configure the simulation
-        // NBody2d sim = new NBody2d(MARS_DIST, 86400, n, EARTH_MASS);
-        NBody2d sim = new NBody2d(400, 1000, 5000, 10);
+        NBody2d sim = new NBody2d(MARS_DIST * 4, 86400, n, EARTH_MASS);
 
         // create a window to view the current state of the simulation
         NBody2dViewer viewer = new NBody2dViewer(sim);
 
-        // run the simulation
-        while (true) {
+        // start the simulation
+        sim.autoStep(1000 / 60);
 
-            // advance the simulation by one time step
-            sim.step();
-
-            // update the display if its loaded
-            if (viewer.isReady()) {
-                viewer.update();
+        // regularly update the viewer
+        new java.util.Timer().scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                if (viewer.isReady()) {
+                    viewer.update();
+                }
             }
-
-            // wait if we finished too fast
-            try {
-                Thread.sleep(1000/60);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        }, 0, 1000 / 60);
     }
 
     /**
@@ -84,8 +84,17 @@ public class NBody2d {
         // populate the array with the specified number of bodies
         for (int i = 0; i < n; i ++) {
             bodies[i] = new Body2d(0, 0, mass);
+            bodies[i].vx = 10000;
+            bodies[i].vy = 10000;
         }
+
         randomizePositions();
+
+        // TODO: remove after testing
+        // add a sun
+        bodies[0].mass = SUN_MASS;
+        bodies[0].x = bodies[0].y = 0;
+        bodies[0].vx = bodies[0].vy = 0;
     }
 
     /**
@@ -119,6 +128,19 @@ public class NBody2d {
     }
 
     /**
+     * Get the maximum force acting on any body in the simulation.
+     * @return the maximum force
+     */
+    public double getMaxForce() {
+        double maxForce = 0;
+        for (Body2d body : bodies) {
+            double currentForce = Math.sqrt(body.fx * body.fx + body.fy * body.fy);
+            if (currentForce > maxForce) maxForce = currentForce;
+        }
+        return maxForce;
+    }
+
+    /**
      * Advances the simulation by one time step.
      */
     public void step() {
@@ -128,11 +150,44 @@ public class NBody2d {
             body.updateForces(bodies);
         }
 
-        // update the position of each body
+        // update the positions of each body
         for (Body2d body : bodies) {
             body.updateVelocity(dt);
             body.updatePosition(dt);
         }
+
+        // update the colors of each body
+        for (Body2d body : bodies) {
+            body.updateColor(getMaxForce());
+        }
+
+        // record the time elapsed
+        timeElapsed += dt;
+    }
+
+    /**
+     * Automatically step the simulation at a real-world time interval. Call stopAutoStep to stop
+     * this behavior.
+     *
+     * @param stepDelay the amount of time to wait between simulation steps.
+     */
+    public void autoStep(long stepDelay) {
+        timer = new java.util.Timer();
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                step();
+            }
+        }, 0, stepDelay);
+        autoStep = true;
+    }
+
+    /**
+     * Stops the autoStep timer. If autoStep is not running, this method does nothing.
+     */
+    public void stopAutoStep() {
+        timer.cancel();
+        autoStep = false;
     }
 
     /**
@@ -155,5 +210,13 @@ public class NBody2d {
 
     public Body2d[] getBodies() {
         return bodies;
+    }
+
+    public long getTimeElapsed() {
+        return timeElapsed;
+    }
+
+    public void setTimeElapsed(long timeElapsed) {
+        this.timeElapsed = timeElapsed;
     }
 }
