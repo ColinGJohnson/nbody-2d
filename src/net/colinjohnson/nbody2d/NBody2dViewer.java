@@ -20,9 +20,10 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
     private double scale;               // simulation meters per on-screen pixel
     private boolean ready = false;      // is the viewer ready to display graphics?
 
-    boolean isPanning = false;          // is the user currently panning? (right mouse button)
-    int panX = 0;                      // the vertical distance the user has panned
-    int panY = 0;                      // the horizontal distance the user has panned
+    private boolean isPanning = false;  // is the user currently panning? (right mouse button)
+    private Point panStartMouse;        // mouse position at start of pan
+    private Point panStart;             // pan position at start of pan
+    private Point pan;                  // the current x and y distance panned from the origin
 
     /**
      * NBody2dViewer Constructor. Creates and configures display panel.
@@ -31,7 +32,9 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
      */
     public NBody2dViewer(NBody2d sim) {
         super(true);
+
         this.sim = sim;
+        this.pan = new Point(0,0);
 
         // add mouse and keyboard event listeners to this component
         setFocusable(true);
@@ -44,7 +47,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
             public void run() {
                 createAndShowGUI(false);
 
-                // set initial scale now that the screen size is known
+                // set initial scale and pan now that the screen size is known
                 setScaleToFit();
             }
         });
@@ -99,7 +102,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
      */
     public void setScaleToFit() {
         scale = getScaleToFit();
-        panX = panY = 0;
+        pan.setLocation(0, 0);
     }
 
     /**
@@ -110,11 +113,10 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
      * the simulation coordinate should be displayed.
      */
     private Point pointToPixels(Point2D.Double simCoordinate) {
-
         Point origin = pixelOrigin();
 
-        int pixelX = origin.x + panX + (int)(simCoordinate.getX() / scale);
-        int pixelY = origin.y + panY + (int)(simCoordinate.getY() / scale);
+        int pixelX = origin.x + pan.x + (int)(simCoordinate.getX() / scale);
+        int pixelY = origin.y + pan.y + (int)(simCoordinate.getY() / scale);
 
         return new Point(pixelX, pixelY);
     }
@@ -203,10 +205,14 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
     }
 
     /**
-     * Updates the display to match the current state of the currently observed simulation.
+     * Updates the display to match the current state of the currently observed simulation. Also
+     * some user interaction data.
      */
     public void update() {
         repaint();
+        if (isPanning) {
+            updatePan();
+        }
     }
 
     /**
@@ -231,13 +237,11 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
         // TODO: use one of these to "select" a body, possibly multiple, for tracking
         // TODO: treat the mouse cursor as a strong source of gravity when pressed
         if (e.getButton() == MouseEvent.BUTTON1) {
-            System.out.println("button 1");
 
         } else if (e.getButton() == MouseEvent.BUTTON2) {
-            System.out.println("button 2");
 
         } else if (e.getButton() == MouseEvent.BUTTON3){
-            System.out.println("button 3");
+            startPan();
             Cursor cursor = new Cursor(Cursor.MOVE_CURSOR);
             frame.setCursor(cursor);
         }
@@ -251,18 +255,58 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
     @Override
     public void mouseReleased(MouseEvent e) {
 
+        // left mouse button
         if (e.getButton() == MouseEvent.BUTTON1) {
-            System.out.println("button 1");
 
+        // middle mouse button
         } else if (e.getButton() == MouseEvent.BUTTON2) {
-            System.out.println("button 2");
             setScaleToFit();
 
-        } else if (e.getButton() == MouseEvent.BUTTON3){
-            System.out.println("button 3");
+        // right mouse button
+        } else if (e.getButton() == MouseEvent.BUTTON3) {
+            endPan();
             Cursor cursor = new Cursor(Cursor.DEFAULT_CURSOR);
             frame.setCursor(cursor);
         }
+    }
+
+    /**
+     * Record the starting location for panning using the mouse. The amount panned exactly
+     * corresponds to the distance moved by the mouse.
+     */
+    private void startPan() {
+        isPanning = true;
+        panStart = new Point(pan.x, pan.y);
+        panStartMouse = mouseLocationOnScreen();
+    }
+
+    /**
+     * Stop panning. Usually called when the 'pan button' is released.
+     */
+    private void endPan() {
+        isPanning = false;
+    }
+
+    /**
+     * Get the current location of the mouse relative to the top left of the window.
+     *
+     * @return the current location of the mouse.
+     */
+    private Point mouseLocationOnScreen() {
+        Point screen = MouseInfo.getPointerInfo().getLocation();
+        Point window = frame.getLocationOnScreen();
+        return new Point(screen.x - window.x,screen.y - window.y);
+    }
+
+    /**
+     * Update how far the viewer is panned from being centered around the origin. Called while the
+     * 'pan button' is pressed (usually right mouse button).
+     */
+    private void updatePan() {
+        Point current = mouseLocationOnScreen();
+        int dx = current.x - panStartMouse.x;
+        int dy = current.y - panStartMouse.y;
+        pan.setLocation(panStart.x + dx, panStart.y + dy);
     }
 
     /**
@@ -301,7 +345,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
      * @param e the event to be processed
      */
     @Override
-    public void mouseMoved(MouseEvent e) {}
+    public void mouseMoved(MouseEvent e) { }
 
     /**
      * Invoked when a key has been typed. See the class description for {@link KeyEvent} for a
@@ -334,16 +378,16 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
             System.out.println("'delete' pressed");
 
         } else if (e.getKeyCode() == KeyEvent.VK_UP) {
-            panY += 20;
+            pan.y += 20;
 
         } else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-            panY -= 20;
+            pan.y -= 20;
 
         } else if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-            panX += 20;
+            pan.x += 20;
 
         } else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-            panX -= 20;
+            pan.x -= 20;
 
         } else if (e.getKeyCode() == KeyEvent.VK_F11) {
             System.out.println("'f11' pressed");
@@ -371,7 +415,6 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
         double rotation = e.getPreciseWheelRotation();
         double newScale = scale + (getScaleToFit() / 10) * rotation;
         if (newScale > 0) scale = newScale;
-        System.out.println("mouse wheel event: " + rotation + ", new scale: " + scale);
     }
 
     public boolean isReady() {
