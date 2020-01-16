@@ -149,10 +149,7 @@ public class Body2d {
      * @param dt delta time
      */
     public void updatePosition(double dt) {
-
         x += dt * vx;
         y += dt * vy;
-
-        // make sure bodies do not move past the boundary of the simulation
     }
 }

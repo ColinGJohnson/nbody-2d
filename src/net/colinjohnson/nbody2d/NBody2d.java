@@ -68,7 +68,7 @@ public class NBody2d {
     }
 
     /**
-     * nbody2d.NBody2d Constructor.
+     * NBody2d Constructor.
      *
      * @param boundary the boundary of the simulation.
      * @param dt delta time (seconds)
@@ -88,7 +88,7 @@ public class NBody2d {
             bodies[i].vy = 10000;
         }
 
-        randomizePositions();
+        randomizePositions(boundary / 2);
 
         // TODO: remove after testing
         // add a sun
@@ -98,7 +98,7 @@ public class NBody2d {
     }
 
     /**
-     * Constructs an nbody2d.NBody2d simulation using a preexisting set of bodies.
+     * Constructs an NBody2d simulation using a preexisting set of bodies.
      *
      * @param boundary the boundary of the simulation.
      * @param dt delta time (seconds)
@@ -114,12 +114,12 @@ public class NBody2d {
      * Relocates bodies to 'n' random locations with both coordinates within 'boundary' meters of
      * the origin.
      */
-    private void randomizePositions() {
+    private void randomizePositions(double limit) {
         for (Body2d body : bodies) {
 
             // pick a random angle in [0, 2pi) and a random distance in [0, boundary)
             double angle = Math.random() * (2 * Math.PI);
-            double distance = Math.pow(Math.random(), 0.5) * boundary;
+            double distance = Math.pow(Math.random(), 0.5) * limit;
 
             // calculate (x,y) coordinate of this point and assign to current body
             body.x = Math.cos(angle) * distance;
@@ -154,6 +154,8 @@ public class NBody2d {
         for (Body2d body : bodies) {
             body.updateVelocity(dt);
             body.updatePosition(dt);
+
+            //TODO: reposition bodies who moved beyond the boundary
         }
 
         // update the colors of each body

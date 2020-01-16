@@ -106,19 +106,45 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
     }
 
     /**
-     * Converts an x or y coordinate from the simulation to pixels using scale, for visualization.
+     * Get the center of the window in pixels from the top left of the window
      *
-     * @param simCoordinate the coordinate in the simulation
-     * @return a Point containing the x and y distance from the top left of the window at which
-     * the simulation coordinate should be displayed.
+     * this is also the location, where the origin (0,0) in the simulation should be drawn assuming
+     * the user hasn't yet panned (panX = panY = 0).
      */
-    private Point pointToPixels(Point2D.Double simCoordinate) {
-        Point origin = pixelOrigin();
+    private Point getScreenCenter() {
+        return new Point(this.getWidth() / 2, this.getHeight() / 2);
+    }
 
-        int pixelX = origin.x + pan.x + (int)(simCoordinate.getX() / scale);
-        int pixelY = origin.y + pan.y + (int)(simCoordinate.getY() / scale);
+    /**
+     * Converts an x or y coordinate using the simulation's coordinate system to a pixels
+     * location on the screen (relative to to the top left of the window).
+     *
+     * @param simCoordinate the coordinate in the simulation to convert to pixels on the screen.
+     * @return a Point containing the coordinates on the screen.
+     */
+    private Point simToPixels(Point2D.Double simCoordinate) {
+        Point screenCenter = getScreenCenter();
+
+        int pixelX = (screenCenter.x + pan.x) + (int)(simCoordinate.getX() / scale);
+        int pixelY = (screenCenter.y + pan.y) + (int)(simCoordinate.getY() / scale);
 
         return new Point(pixelX, pixelY);
+    }
+
+    /**
+     * Converts a pixel on the screen (relative to to the top left of the window) to the
+     * simulation's coordinate system.
+     *
+     * @param pixelCoordinate the coordinate on the screen.
+     * @return A double point containing the coordinates in the simulation.
+     */
+    private Point2D.Double pixelsToSim(Point pixelCoordinate) {
+        Point screenCenter = getScreenCenter();
+
+        double simX = (pixelCoordinate.x - screenCenter.x - pan.x) * scale;
+        double simY = (screenCenter.y - pixelCoordinate.y + pan.y) * scale;
+
+        return new Point2D.Double(simX, simY);
     }
 
     /**
@@ -169,11 +195,11 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
                 + " hours " + minutes + " minutes " + seconds + " seconds ", 20, 70);
 
         // draw border circle
-        Point center = pointToPixels(new Point2D.Double(0,0));
+        Point center = simToPixels(new Point2D.Double(0,0));
         drawCircle(g, (int)center.getX(), (int)center.getY(), distanceToPixels(sim.getBoundary()));
 
         for (Body2d body : sim.getBodies()) {
-            Point drawLocation = pointToPixels(new Point2D.Double(body.x, body.y));
+            Point drawLocation = simToPixels(new Point2D.Double(body.x, body.y));
             g.setColor(body.color);
             drawCircle(g, (int)drawLocation.getX(), (int)drawLocation.getY(), 1);
         }
@@ -190,18 +216,6 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
      */
     public void drawCircle(Graphics g, int x, int y, int radius) {
         g.drawOval(x - radius, y - radius, radius * 2, radius * 2);
-    }
-
-    /**
-     * Get the location, in pixels from the top-left of the window, where the origin of the
-     * simulation should be drawn assuming the user hasn't panned (panX = panY = 0).
-     */
-    private Point pixelOrigin() {
-        return new Point(this.getWidth() / 2, this.getHeight() / 2);
-    }
-
-    private Point windowCenter() {
-        return new Point();
     }
 
     /**
@@ -222,8 +236,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
      */
     @Override
     public void mouseClicked(MouseEvent e) {
-        Point clickLocation = e.getPoint();
-        System.out.println("Mouse clicked at " + clickLocation.toString());
+
     }
 
     /**
@@ -237,7 +250,8 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
         // TODO: use one of these to "select" a body, possibly multiple, for tracking
         // TODO: treat the mouse cursor as a strong source of gravity when pressed
         if (e.getButton() == MouseEvent.BUTTON1) {
-
+            System.out.println(e.getPoint());
+            System.out.println(pixelsToSim(e.getPoint()));
         } else if (e.getButton() == MouseEvent.BUTTON2) {
 
         } else if (e.getButton() == MouseEvent.BUTTON3){
@@ -412,9 +426,32 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
      */
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
+
+        // get the simulation coordinates under the mouse before changing the scale
+        Point2D.Double before = pixelsToSim(e.getPoint());
+
+        // modify the scale (zoom in or our with the mouse wheel)
         double rotation = e.getPreciseWheelRotation();
-        double newScale = scale + (getScaleToFit() / 10) * rotation;
+        double newScale = scale + scale/10 * rotation;
         if (newScale > 0) scale = newScale;
+
+        // update pan so that area being pointed to stays the same
+        Point2D.Double after = pixelsToSim(e.getPoint());
+        pan.x += distanceToPixels(after.x - before.x);
+        pan.y -= distanceToPixels(after.y - before.y);
+    }
+
+    /**
+     * Center the window around a certain location in the simulation.
+     *
+     * @param point
+     */
+    // TODO: this method might be broken
+    private void centerWindowOn(Point2D.Double point) {
+        Point center = getScreenCenter();
+        Point newCenter = simToPixels(point);
+        pan.x += newCenter.x - center.x;
+        pan.y -= newCenter.y - center.y;
     }
 
     public boolean isReady() {
