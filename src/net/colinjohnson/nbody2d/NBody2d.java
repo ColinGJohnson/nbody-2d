@@ -1,7 +1,5 @@
 package net.colinjohnson.nbody2d;
 
-import javax.swing.*;
-import java.util.Timer;
 import java.util.TimerTask;
 
 /**
@@ -14,7 +12,9 @@ public class NBody2d {
     // useful constants
     public static final double MOON_MASS = 7.347e10;   // moon mass (kilograms)
     public static final double EARTH_MASS = 5.972e24;  // mass of the earth (kilograms)
+    public static final double EARTH_RADIUS = 6.356e6; // radius of the earth (meters)
     public static final double SUN_MASS = 1.989e30;    // mass of the sun (kilograms)
+    public static final double SUN_RADIUS = 6.955e8;   // radius of the sun
     public static final double MARS_DIST = 2.3816e11;  // distance to mars (meters)
 
     // simulation parameters
@@ -48,7 +48,7 @@ public class NBody2d {
         System.out.format("Starting simulation with n=%d bodies\n", n);
 
         // create and configure the simulation
-        NBody2d sim = new NBody2d(MARS_DIST * 4, 86400, n, EARTH_MASS);
+        NBody2d sim = new NBody2d(MARS_DIST, 3600, n, EARTH_MASS, EARTH_RADIUS);
 
         // create a window to view the current state of the simulation
         NBody2dViewer viewer = new NBody2dViewer(sim);
@@ -75,7 +75,7 @@ public class NBody2d {
      * @param n the number of bodies to simulate
      * @param mass the mass for the simulated bodies
      */
-    public NBody2d(double boundary, double dt, int n, double mass) {
+    public NBody2d(double boundary, double dt, int n, double mass, double radius) {
         this.boundary = boundary;
         this.dt = dt;
         this.n = n;
@@ -83,7 +83,7 @@ public class NBody2d {
 
         // populate the array with the specified number of bodies
         for (int i = 0; i < n; i ++) {
-            bodies[i] = new Body2d(0, 0, mass);
+            bodies[i] = new Body2d(0, 0, mass, radius);
             bodies[i].vx = 10000;
             bodies[i].vy = 10000;
         }
@@ -93,6 +93,7 @@ public class NBody2d {
         // TODO: remove after testing
         // add a sun
         bodies[0].mass = SUN_MASS;
+        bodies[0].r = SUN_RADIUS;
         bodies[0].x = bodies[0].y = 0;
         bodies[0].vx = bodies[0].vy = 0;
     }
@@ -111,10 +112,10 @@ public class NBody2d {
     }
 
     /**
-     * Relocates bodies to 'n' random locations with both coordinates within 'boundary' meters of
-     * the origin.
+     * Relocates this simulation's bodies to 'n' random locations with both coordinates within
+     * 'boundary' meters of the origin.
      */
-    private void randomizePositions(double limit) {
+    public void randomizePositions(double limit) {
         for (Body2d body : bodies) {
 
             // pick a random angle in [0, 2pi) and a random distance in [0, boundary)
@@ -201,7 +202,7 @@ public class NBody2d {
     }
 
     /**
-     * Get the boundary of this simulation. No bodies are allows to exist beyong this distance
+     * Get the boundary of this simulation. No bodies are allows to exist beyond this distance
      * from the origin.
      *
      * @return the distance, in meters, from the origin to the simulation's boundary

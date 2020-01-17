@@ -13,13 +13,13 @@ public class Body2d {
     // universal gravitational constant
     private static final double G = 6.673e-11;
 
-    public double r;     // physical radius of this body (in meters)
     public double x;     // x-distance from the origin (in meters)
     public double y;     // y-distance from the origin (in meters)
     public double vx;    // x-velocity (in meters per second)
     public double vy;    // y-velocity (in meters per second)
     public double fx;    // x-force (in Newtons)
     public double fy;    // y-force (in Newtons)
+    public double r;     // physical radius of this body (in meters)
     public double mass;  // the mass of this body (in kilograms)
     public Color color;  // the color of this body (not used in calculations)
 
@@ -30,11 +30,13 @@ public class Body2d {
      * @param x the initial x-position of this body
      * @param y the initial y-position of this body
      * @param mass the mass of this body
+     * @param r the radius of this body
      */
-    public Body2d(double x, double y, double mass) {
+    public Body2d(double x, double y, double mass, double  r) {
         this.x = x;
         this.y = y;
         this.mass = mass;
+        this.r = r;
         this.color = Color.WHITE;
     }
 

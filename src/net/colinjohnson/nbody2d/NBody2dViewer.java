@@ -164,6 +164,33 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
     }
 
     /**
+     * Converts a number of seconds into a human readable String of the form "__y __m __d __m __s".
+     *
+     * @param n a number of seconds
+     * @return a human readable string
+     */
+    public static String secondsToString(long n) {
+        long years = n / (365 * 24 * 3600);
+        n = n % (365 * 24 * 3600);
+        long days = n / (24 * 3600);
+        n = n % (24 * 3600);
+        long hours = n / 3600;
+        n %= 3600;
+        long minutes = n / 60 ;
+        n %= 60;
+        long seconds = n;
+
+        String result = "";
+        if (years >  0) result += years + "y ";
+        if (days > 0) result += days + "d ";
+        if (hours > 0) result += hours + "h ";
+        if (minutes > 0) result += minutes + "m ";
+        if (seconds > 0) result += seconds + "s ";
+
+        return result;
+    }
+
+    /**
      * Overrides the custom JComponent paint method to display custom graphics.
      *
      * @param g the graphics context to paint with
@@ -180,28 +207,23 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
         g.setColor(Color.WHITE);
         g.drawString("tracked particles: " + sim.getN(), 20, 40);
         g.drawString(String.format("scale: %.2e meters / pixel", scale), 20, 55);
-
-        long n = sim.getTimeElapsed();
-        long years = n / (365 * 24 * 3600);
-        n = n % (365 * 24 * 3600);
-        long days = n / (24 * 3600);
-        n = n % (24 * 3600);
-        long hours = n / 3600;
-        n %= 3600;
-        long minutes = n / 60 ;
-        n %= 60;
-        long seconds = n;
-        g.drawString("sim time elapsed: " + years + " years " + days + " days " + hours
-                + " hours " + minutes + " minutes " + seconds + " seconds ", 20, 70);
+        g.drawString("simulated time: " + secondsToString(sim.getTimeElapsed()), 20, 70);
 
         // draw border circle
         Point center = simToPixels(new Point2D.Double(0,0));
-        drawCircle(g, (int)center.getX(), (int)center.getY(), distanceToPixels(sim.getBoundary()));
+        drawCircle(g, center.x, center.y, distanceToPixels(sim.getBoundary()));
 
         for (Body2d body : sim.getBodies()) {
-            Point drawLocation = simToPixels(new Point2D.Double(body.x, body.y));
+            Point location = simToPixels(new Point2D.Double(body.x, body.y));
+
             g.setColor(body.color);
-            drawCircle(g, (int)drawLocation.getX(), (int)drawLocation.getY(), 1);
+            int radius = distanceToPixels(body.r);
+            if (radius < 1) radius = 1;
+            drawCircle(g, location.x, location.y, radius);
+
+            g.setColor(Color.WHITE);
+            int width = radius * 2 + 4;
+            // g.drawRect(location.x - width / 2, location.y - width / 2, width, width);
         }
     }
 
@@ -250,14 +272,14 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
         // TODO: use one of these to "select" a body, possibly multiple, for tracking
         // TODO: treat the mouse cursor as a strong source of gravity when pressed
         if (e.getButton() == MouseEvent.BUTTON1) {
-            System.out.println(e.getPoint());
-            System.out.println(pixelsToSim(e.getPoint()));
-        } else if (e.getButton() == MouseEvent.BUTTON2) {
-
-        } else if (e.getButton() == MouseEvent.BUTTON3){
             startPan();
             Cursor cursor = new Cursor(Cursor.MOVE_CURSOR);
             frame.setCursor(cursor);
+
+        } else if (e.getButton() == MouseEvent.BUTTON2) {
+
+        } else if (e.getButton() == MouseEvent.BUTTON3){
+
         }
     }
 
@@ -271,6 +293,9 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
 
         // left mouse button
         if (e.getButton() == MouseEvent.BUTTON1) {
+            endPan();
+            Cursor cursor = new Cursor(Cursor.DEFAULT_CURSOR);
+            frame.setCursor(cursor);
 
         // middle mouse button
         } else if (e.getButton() == MouseEvent.BUTTON2) {
@@ -278,9 +303,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
 
         // right mouse button
         } else if (e.getButton() == MouseEvent.BUTTON3) {
-            endPan();
-            Cursor cursor = new Cursor(Cursor.DEFAULT_CURSOR);
-            frame.setCursor(cursor);
+
         }
     }
 
@@ -349,9 +372,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
      * @param e the event to be processed
      */
     @Override
-    public void mouseDragged(MouseEvent e) {
-        System.out.println("mouse drag event");
-    }
+    public void mouseDragged(MouseEvent e) {}
 
     /**
      * Invoked when the mouse cursor has been moved onto a component but no buttons have been pushed.
@@ -359,7 +380,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
      * @param e the event to be processed
      */
     @Override
-    public void mouseMoved(MouseEvent e) { }
+    public void mouseMoved(MouseEvent e) {}
 
     /**
      * Invoked when a key has been typed. See the class description for {@link KeyEvent} for a
@@ -379,17 +400,18 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
     @Override
     public void keyPressed(KeyEvent e) {
         if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
-            System.out.println("'escape' pressed - exiting...");
             System.exit(0);
 
         } else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-            System.out.println("'enter' pressed");
 
         } else if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-            System.out.println("'space' pressed");
+            if (sim.autoStep) {
+                sim.stopAutoStep();
+            } else {
+                sim.autoStep(1000/60);
+            }
 
         } else if (e.getKeyCode() == KeyEvent.VK_DELETE) {
-            System.out.println("'delete' pressed");
 
         } else if (e.getKeyCode() == KeyEvent.VK_UP) {
             pan.y += 20;
@@ -403,8 +425,10 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
         } else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
             pan.x -= 20;
 
+        } else if (e.getKeyCode() == KeyEvent.VK_R) {
+            sim.randomizePositions(sim.getBoundary()/2);
+
         } else if (e.getKeyCode() == KeyEvent.VK_F11) {
-            System.out.println("'f11' pressed");
             toggleFullScreen();
         }
     }
@@ -416,7 +440,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
      * @param e the event to be processed
      */
     @Override
-    public void keyReleased(KeyEvent e) {}
+    public void keyReleased(KeyEvent e) { }
 
     /**
      * Invoked when the mouse wheel is rotated.
