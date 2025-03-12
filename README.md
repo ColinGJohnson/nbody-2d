@@ -1,4 +1,4 @@
-# gravity-particles
+# nbody-2d
 A simple N-body simulation implementing Newtonian gravity on a 2D field of dynamically colored particles.
 
 ## Usage
