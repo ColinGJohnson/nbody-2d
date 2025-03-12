@@ -52,14 +52,14 @@ public class Body2d {
     public void updateColor(double limit) {
         double v = Math.sqrt(fx * fx + fy * fy);
         float h = 0.5f * (float)Math.pow((v/limit), 0.3);
-        float s = 0.7f;;
+        float s = 0.7f;
         float b = 1f;
         color = Color.getHSBColor(h, s, b);
     }
 
     /**
-     * Updates the forces currently acting on this body using Newtonian Gravity. *Does not effect
-     * position or velocity*.
+     * Updates the forces currently acting on this body using Newtonian Gravity. Does not affect
+     * position or velocity.
      *
      * @param environment an ArrayList of other bodies whose gravity should be considered.
      */
@@ -125,18 +125,18 @@ public class Body2d {
     }
 
     /**
-     * Calculates the distance from a body to the origin (0,0)
+     * Calculates the distance from a body to the origin (0,0).
      *
-     * @param body
-     * @return the distance (in meters) from the body to the origin
+     * @param body The body to calculate distance to.
+     * @return the distance (in meters) from the body to the origin.
      */
     public static double distFromOrigin(Body2d body) {
         return distFrom(body, 0, 0);
     }
 
     /**
-     * Updates the velocity of this body given the forces currently acting on it *does not effect
-     * position or forces*.
+     * Updates the velocity of this body given the forces currently acting on it. Does not affect
+     * position or forces.
      *
      * @param dt delta time; the length of time for which the acceleration produced by the current
      *           forces on this body should be applied
@@ -147,8 +147,8 @@ public class Body2d {
     }
 
     /**
-     * Updates the position of this body given the current velocity *does not effect forces or
-     * velocity*
+     * Updates the position of this body given the current velocity. Does not affect forces or
+     * velocity.
      *
      * @param dt delta time
      */

@@ -25,7 +25,7 @@ import java.time.Duration;
  */
 public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWheelListener, KeyListener {
 
-    private NBody2d sim;                // the simulation being displayed
+    private final NBody2d sim;                // the simulation being displayed
     private JFrame frame;               // the frame that the simulation is displayed in
     private boolean fullScreen = false; // is the viewer full screen currently?
     private double scale;               // simulation meters per on-screen pixel
@@ -34,7 +34,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
     private boolean isPanning = false;  // is the user currently panning? (right mouse button)
     private Point panStartMouse;        // mouse position at start of pan
     private Point panStart;             // pan position at start of pan
-    private Point pan;                  // the current x and y distance panned from the origin
+    private final Point pan;                  // the current x and y distance panned from the origin
 
     /**
      * NBody2dViewer Constructor. Creates and configures display panel.
@@ -54,18 +54,16 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
         addKeyListener(this);
 
         // create a new window on which to display the simulation
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                createAndShowGUI(false);
+        SwingUtilities.invokeLater(() -> {
+            createAndShowGUI(false);
 
-                // set initial scale and pan now that the screen size is known
-                setScaleToFit();
-            }
+            // set initial scale and pan now that the screen size is known
+            setScaleToFit();
         });
     }
 
     /**
-     * Creates and configures a new JFrame containing a single nbody2d.NBody2dViewer.
+     * Creates and configures a new JFrame containing a single {@link NBody2dViewer}.
      *
      * @param makeFullscreen determines whether the created window is full screen or not.
      */
@@ -100,7 +98,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
     }
 
     /**
-     * Calculates the scale required fit the whole simulation space within the current window size.
+     * Calculates the scale required to fit the whole simulation space within the current window.
      */
     public double getScaleToFit() {
         double constraint = Math.min(frame.getWidth(), frame.getHeight());
@@ -109,7 +107,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
     }
 
     /**
-     * Resets the scale and pan to fit the whole simulation space within the current window size.
+     * Resets the scale and pan to fit the whole simulation space within the current window.
      */
     public void setScaleToFit() {
         scale = getScaleToFit();
@@ -117,10 +115,11 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
     }
 
     /**
-     * Get the center of the window in pixels from the top left of the window
-     *
-     * this is also the location, where the origin (0,0) in the simulation should be drawn assuming
-     * the user hasn't yet panned (panX = panY = 0).
+     * Get the center of the window in pixels from the top left of the window.
+     * <p>
+     *   This is also the location where the origin (0,0) in the simulation should be drawn assuming
+     *   the user hasn't yet panned (panX = panY = 0).
+     * </p>
      */
     private Point getScreenCenter() {
         return new Point(this.getWidth() / 2, this.getHeight() / 2);
@@ -128,7 +127,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
 
     /**
      * Converts an x or y coordinate using the simulation's coordinate system to a pixels
-     * location on the screen (relative to to the top left of the window).
+     * location on the screen (relative to the top left of the window).
      *
      * @param simCoordinate the coordinate in the simulation to convert to pixels on the screen.
      * @return a Point containing the coordinates on the screen.
@@ -143,7 +142,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
     }
 
     /**
-     * Converts a pixel on the screen (relative to to the top left of the window) to the
+     * Converts a pixel on the screen (relative to the top left of the window) to the
      * simulation's coordinate system.
      *
      * @param pixelCoordinate the coordinate on the screen.
@@ -165,13 +164,13 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
      * @return a distance in pixels
      */
     private int distanceToPixels(double distance) {
-        Long pixelDistance = Math.round(distance / scale);
+        long pixelDistance = Math.round(distance / scale);
 
         if (Math.abs(pixelDistance) > Integer.MAX_VALUE) {
             System.err.println("Warning: inaccurate conversion of long pixel distance to integer");
         }
 
-        return pixelDistance.intValue();
+        return (int) pixelDistance;
     }
 
     /**
@@ -235,8 +234,8 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
     }
 
     /**
-     * Updates the display to match the current state of the currently observed simulation. Also
-     * some user interaction data.
+     * Updates the display to match the current state of the currently observed simulation and some
+     * user interaction data.
      */
     public void update() {
         repaint();
@@ -385,11 +384,18 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
     @Override
     public void keyTyped(KeyEvent e) {}
 
+
     /**
-     * Invoked when a key has been pressed. See the class description for {@link KeyEvent} for a
-     * of a key pressed event.
+     * Handles key press events on the viewer. Defines custom behavior based on the key pressed.
+     * <ul>
+     *   <li>ESCAPE: Exit the application.</li>
+     *   <li>SPACE: Toggle between starting and stopping the simulation's auto-step mode.</li>
+     *   <li>Arrow keys: Pan the simulation view in the respective direction.</li>
+     *   <li>R: Randomize the positions of the simulation bodies within half the boundary.</li>
+     *   <li>F11: Toggle between full-screen and windowed mode.</li>
+     * </ul>
      *
-     * @param e the event to be processed
+     * @param e the {@link KeyEvent} representing the key press event.
      */
     @Override
     public void keyPressed(KeyEvent e) {
@@ -402,7 +408,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
             if (sim.autoStep) {
                 sim.stopAutoStep();
             } else {
-                sim.autoStep(1000/60);
+                sim.autoStep(1000 / 60);
             }
 
         } else if (e.getKeyCode() == KeyEvent.VK_DELETE) {
@@ -420,7 +426,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
             pan.x -= 20;
 
         } else if (e.getKeyCode() == KeyEvent.VK_R) {
-            sim.randomizePositions(sim.getBoundary()/2);
+            sim.randomizePositions(sim.getBoundary() / 2);
 
         } else if (e.getKeyCode() == KeyEvent.VK_F11) {
             toggleFullScreen();
@@ -462,7 +468,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
     /**
      * Center the window around a certain location in the simulation.
      *
-     * @param point
+     * @param point The point to center the window around.
      */
     // TODO: this method might be broken
     private void centerWindowOn(Point2D.Double point) {

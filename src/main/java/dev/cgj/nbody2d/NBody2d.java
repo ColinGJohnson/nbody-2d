@@ -15,7 +15,7 @@ public class NBody2d {
     public static final double EARTH_RADIUS = 6.356e6; // radius of the earth (meters)
     public static final double SUN_MASS = 1.989e30;    // mass of the sun (kilograms)
     public static final double SUN_RADIUS = 6.955e8;   // radius of the sun
-    public static final double MARS_DIST = 2.3816e11;  // distance to mars (meters)
+    public static final double MARS_DIST = 2.3816e11;  // distance to Mars (meters)
 
     // simulation parameters
     private int n;              // the number of bodies being simulated
@@ -31,8 +31,9 @@ public class NBody2d {
     private long timeElapsed;   // the amount of simulated time that has passed so far (seconds)
 
     /**
-     * Main method which creates and configures an nbody2d.NBody2d simulation.
-     * @param args if an integer is passed as an argument then it will be used as n
+     * Main method which creates and configures a {@link NBody2d} simulation.
+     *
+     * @param args if an integer is passed as an argument then it will determine the 'n' parameter.
      */
     public static void main(String[] args) {
 
@@ -129,8 +130,9 @@ public class NBody2d {
     }
 
     /**
-     * Get the maximum force acting on any body in the simulation.
-     * @return the maximum force
+     * Get the maximum force acting on any {@link Body2d} in the simulation.
+     *
+     * @return The maximum force in Newtons.
      */
     public double getMaxForce() {
         double maxForce = 0;
@@ -165,7 +167,7 @@ public class NBody2d {
         }
 
         // record the time elapsed
-        timeElapsed += dt;
+        timeElapsed += (long) dt;
     }
 
     /**
