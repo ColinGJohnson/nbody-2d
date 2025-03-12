@@ -1,16 +1,27 @@
-package net.colinjohnson.nbody2d;
+package dev.cgj.nbody2d;
 
-import javax.swing.*;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 import javax.swing.event.MouseInputListener;
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Graphics;
+import java.awt.MouseInfo;
+import java.awt.Point;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.awt.geom.Point2D;
+import java.time.Duration;
 
 /**
  * Application to display and manipulates a 2-dimensional n-body simulation (NBody2d). A window
  * will be created immediately upon instantiation.
  *
- * @Author Colin Johnson
+ * @author Colin Johnson
  */
 public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWheelListener, KeyListener {
 
@@ -164,30 +175,13 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
     }
 
     /**
-     * Converts a number of seconds into a human readable String of the form "__y __m __d __m __s".
+     * Converts a number of seconds into a human-readable String of the form "__y __m __d __m __s".
      *
      * @param n a number of seconds
-     * @return a human readable string
+     * @return a human-readable string
      */
     public static String secondsToString(long n) {
-        long years = n / (365 * 24 * 3600);
-        n = n % (365 * 24 * 3600);
-        long days = n / (24 * 3600);
-        n = n % (24 * 3600);
-        long hours = n / 3600;
-        n %= 3600;
-        long minutes = n / 60 ;
-        n %= 60;
-        long seconds = n;
-
-        String result = "";
-        if (years >  0) result += years + "y ";
-        if (days > 0) result += days + "d ";
-        if (hours > 0) result += hours + "h ";
-        if (minutes > 0) result += minutes + "m ";
-        if (seconds > 0) result += seconds + "s ";
-
-        return result;
+        return Duration.ofSeconds(n).toString();
     }
 
     /**

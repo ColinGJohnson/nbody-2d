@@ -1,16 +1,18 @@
-package net.colinjohnson.nbody2d;
+package dev.cgj.nbody2d;
 
-import java.awt.*;
+import java.awt.Color;
 
 /**
  * An object used to represent a body. Each body keeps track of its position, velocity, and the
  * forces acting on it.
  *
- * @Author Colin Johnson
+ * @author Colin Johnson
  */
 public class Body2d {
 
-    // universal gravitational constant
+    /**
+     * Universal gravitational constant.
+     */
     private static final double G = 6.673e-11;
 
     public double x;     // x-distance from the origin (in meters)

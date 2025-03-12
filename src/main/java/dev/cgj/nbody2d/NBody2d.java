@@ -1,11 +1,11 @@
-package net.colinjohnson.nbody2d;
+package dev.cgj.nbody2d;
 
 import java.util.TimerTask;
 
 /**
  * A simple brute-force 2-dimensional n-body simulation using Newtonian Gravity.
  *
- * @Author Colin Johnson
+ * @author Colin Johnson
  */
 public class NBody2d {
 
@@ -19,11 +19,11 @@ public class NBody2d {
 
     // simulation parameters
     private int n;              // the number of bodies being simulated
-    private Body2d[] bodies;    // Array of bodies
-    private double boundary;    // the edge of this simulation's "universe"
+    private final Body2d[] bodies;    // Array of bodies
+    private final double boundary;    // the edge of this simulation's "universe"
 
     // simulation timing
-    private double dt;          // the amount of simulated time between steps (seconds)
+    private final double dt;          // the amount of simulated time between steps (seconds)
     boolean  autoStep;          // true when the simulation is automatically calling step();
     java.util.Timer timer;      // timer for autoStep()
 
