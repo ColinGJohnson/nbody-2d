@@ -213,11 +213,26 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
             int radius = distanceToPixels(body.r);
             if (radius < 1) radius = 1;
             drawCircle(g, location.x, location.y, radius);
-
-            g.setColor(Color.WHITE);
-            int width = radius * 2 + 4;
-            // g.drawRect(location.x - width / 2, location.y - width / 2, width, width);
+            drawPositionHistory(g, body);
         }
+    }
+
+    /**
+     * Draws the historical positions of the body as a series of connected lines on the given graphics context.
+     *
+     * @param g the graphics context used to draw the position history
+     * @param body the body whose position history is to be drawn
+     */
+    private void drawPositionHistory(Graphics g, Body2d body) {
+        g.setColor(Color.GRAY);
+        final Point[] prev = {null};
+        body.getPositionHistory().forEach(position -> {
+            Point current = simToPixels(position);
+            if (prev[0] != null) {
+                g.drawLine(prev[0].x, prev[0].y, current.x, current.y);
+            }
+            prev[0] = current;
+        });
     }
 
     /**

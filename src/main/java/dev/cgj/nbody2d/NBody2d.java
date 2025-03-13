@@ -18,12 +18,12 @@ public class NBody2d {
     public static final double MARS_DIST = 2.3816e11;  // distance to Mars (meters)
 
     // simulation parameters
-    private int n;              // the number of bodies being simulated
+    private int n;                    // the number of bodies being simulated
     private final Body2d[] bodies;    // Array of bodies
     private final double boundary;    // the edge of this simulation's "universe"
 
     // simulation timing
-    private final double dt;          // the amount of simulated time between steps (seconds)
+    private final double dt;    // the amount of simulated time between steps (seconds)
     boolean  autoStep;          // true when the simulation is automatically calling step();
     java.util.Timer timer;      // timer for autoStep()
 

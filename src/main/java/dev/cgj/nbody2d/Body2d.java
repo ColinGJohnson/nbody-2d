@@ -1,6 +1,10 @@
 package dev.cgj.nbody2d;
 
 import java.awt.Color;
+import java.awt.geom.Point2D;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * An object used to represent a body. Each body keeps track of its position, velocity, and the
@@ -23,7 +27,11 @@ public class Body2d {
     public double fy;    // y-force (in Newtons)
     public double r;     // physical radius of this body (in meters)
     public double mass;  // the mass of this body (in kilograms)
+
     public Color color;  // the color of this body (not used in calculations)
+
+    // maintain a history of the last 100 positions
+    BoundedQueue<Point2D.Double> positionHistory = new BoundedQueue<>(100);
 
     /**
      * Body Constructor; bodies initially have 0 velocity relative to the origin and have their
@@ -155,5 +163,10 @@ public class Body2d {
     public void updatePosition(double dt) {
         x += dt * vx;
         y += dt * vy;
+        positionHistory.add(new Point2D.Double(x, y));
+    }
+
+    public BoundedQueue<Point2D.Double> getPositionHistory() {
+        return positionHistory;
     }
 }
