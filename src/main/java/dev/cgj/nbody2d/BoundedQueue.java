@@ -3,7 +3,7 @@ package dev.cgj.nbody2d;
 import java.util.ArrayDeque;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 public class BoundedQueue<T> {
     private final ArrayDeque<T> deque = new ArrayDeque<>();
@@ -32,12 +32,22 @@ public class BoundedQueue<T> {
         }
     }
 
-    public void forEach(Consumer<T> f) {
+    public void enumerate(BiConsumer<Integer, T> f) {
         lock.readLock().lock();
         try {
+            int i = 0;
             for (T item : deque) {
-                f.accept(item);
+                f.accept(i++, item);
             }
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+
+    public int size() {
+        lock.readLock().lock();
+        try {
+            return deque.size();
         } finally {
             lock.readLock().unlock();
         }

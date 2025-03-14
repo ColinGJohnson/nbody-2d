@@ -4,9 +4,11 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.event.MouseInputListener;
+import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.event.KeyEvent;
@@ -25,7 +27,7 @@ import java.time.Duration;
  */
 public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWheelListener, KeyListener {
 
-    private final NBody2d sim;                // the simulation being displayed
+    private final NBody2d sim;          // the simulation being displayed
     private JFrame frame;               // the frame that the simulation is displayed in
     private boolean fullScreen = false; // is the viewer full screen currently?
     private double scale;               // simulation meters per on-screen pixel
@@ -34,7 +36,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
     private boolean isPanning = false;  // is the user currently panning? (right mouse button)
     private Point panStartMouse;        // mouse position at start of pan
     private Point panStart;             // pan position at start of pan
-    private final Point pan;                  // the current x and y distance panned from the origin
+    private final Point pan;            // the current x and y distance panned from the origin
 
     /**
      * NBody2dViewer Constructor. Creates and configures display panel.
@@ -129,14 +131,15 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
      * Converts an x or y coordinate using the simulation's coordinate system to a pixels
      * location on the screen (relative to the top left of the window).
      *
-     * @param simCoordinate the coordinate in the simulation to convert to pixels on the screen.
+     * @param x the x-coordinate in the simulation to convert to pixels on the screen.
+     * @param y the y-coordinate in the simulation to convert to pixels on the screen.
      * @return a Point containing the coordinates on the screen.
      */
-    private Point simToPixels(Point2D.Double simCoordinate) {
+    private Point simToPixels(double x, double y) {
         Point screenCenter = getScreenCenter();
 
-        int pixelX = (screenCenter.x + pan.x) + (int)(simCoordinate.getX() / scale);
-        int pixelY = (screenCenter.y + pan.y) + (int)(simCoordinate.getY() / scale);
+        int pixelX = (screenCenter.x + pan.x) + (int) (x / scale);
+        int pixelY = (screenCenter.y + pan.y) + (int) (y / scale);
 
         return new Point(pixelX, pixelY);
     }
@@ -203,36 +206,84 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
         g.drawString("simulated time: " + secondsToString(sim.getTimeElapsed()), 20, 70);
 
         // draw border circle
-        Point center = simToPixels(new Point2D.Double(0,0));
+        Point center = simToPixels(0, 0);
         drawCircle(g, center.x, center.y, distanceToPixels(sim.getBoundary()));
 
         for (Body2d body : sim.getBodies()) {
-            Point location = simToPixels(new Point2D.Double(body.x, body.y));
+            Point location = simToPixels(body.state.x, body.state.y);
 
-            g.setColor(body.color);
-            int radius = distanceToPixels(body.r);
+            g.setColor(body.state.color);
+            int radius = distanceToPixels(body.state.r);
             if (radius < 1) radius = 1;
             drawCircle(g, location.x, location.y, radius);
-            drawPositionHistory(g, body);
+            drawForceVector(g, body);
+
+            // Swing uses Graphics2D internally, so this downcast is safe
+            drawHistoryTrail((Graphics2D) g, body, false);
         }
     }
 
     /**
-     * Draws the historical positions of the body as a series of connected lines on the given graphics context.
+     * Draw a short red line representing the direction of the net force acting on a given body.
+     *
+     * @param g    the graphics context used for drawing
+     * @param body the body for which to draw the force vector
+     */
+    private void drawForceVector(Graphics g, Body2d body) {
+        Point bodyLocation = simToPixels(body.state.x, body.state.y);
+
+        // Normalize the force vector
+        double forceMagnitude = Math.sqrt(body.state.fx * body.state.fx + body.state.fy * body.state.fy);
+        if (forceMagnitude != 0) {
+            double normalizedFx = body.state.fx / forceMagnitude;
+            double normalizedFy = body.state.fy / forceMagnitude;
+
+            // Calculate the endpoint of the vector
+            int vectorLength = 20;
+            int endX = bodyLocation.x + (int) (normalizedFx * vectorLength);
+            int endY = bodyLocation.y + (int) (normalizedFy * vectorLength);
+
+            // Draw the vector
+            g.setColor(Color.RED);
+            g.drawLine(bodyLocation.x, bodyLocation.y, endX, endY);
+        }
+    }
+
+    /**
+     * Draws the historical positions of the body as a series of connected lines on the given
+     * graphics context.
      *
      * @param g the graphics context used to draw the position history
      * @param body the body whose position history is to be drawn
      */
-    private void drawPositionHistory(Graphics g, Body2d body) {
-        g.setColor(Color.GRAY);
+    private void drawHistoryTrail(Graphics2D g, Body2d body, boolean color) {
         final Point[] prev = {null};
-        body.getPositionHistory().forEach(position -> {
-            Point current = simToPixels(position);
+        g.setColor(Color.GRAY);
+
+        body.getHistory().enumerate((i, state) -> {
+
+            // Updating color + opacity for every history point is slow, so use every 20th element
+            if (i % 20 == 0) {
+
+                // Fade the line's opacity the start to the end
+                float opacity = i / (float) body.getHistory().size();
+                g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
+
+                if (color) {
+                    g.setColor(state.color);
+                }
+            }
+
+            Point current = simToPixels(state.x, state.y);
             if (prev[0] != null) {
                 g.drawLine(prev[0].x, prev[0].y, current.x, current.y);
             }
+            
             prev[0] = current;
         });
+
+        // Reset opacity to 100%
+        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
     }
 
     /**
@@ -481,14 +532,15 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
     }
 
     /**
+     * TODO: this method might be broken
      * Center the window around a certain location in the simulation.
      *
-     * @param point The point to center the window around.
+     * @param x x-coordinate of the point to center the window around.
+     * @param y y-coordinate of the point to center the window around.
      */
-    // TODO: this method might be broken
-    private void centerWindowOn(Point2D.Double point) {
+    private void centerWindowOn(double x, double y) {
         Point center = getScreenCenter();
-        Point newCenter = simToPixels(point);
+        Point newCenter = simToPixels(x, y);
         pan.x += newCenter.x - center.x;
         pan.y -= newCenter.y - center.y;
     }

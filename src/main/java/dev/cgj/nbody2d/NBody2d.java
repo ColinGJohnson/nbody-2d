@@ -85,18 +85,18 @@ public class NBody2d {
         // populate the array with the specified number of bodies
         for (int i = 0; i < n; i ++) {
             bodies[i] = new Body2d(0, 0, mass, radius);
-            bodies[i].vx = 10000;
-            bodies[i].vy = 10000;
+            bodies[i].state.vx = 10000;
+            bodies[i].state.vy = 10000;
         }
 
         randomizePositions(boundary / 2);
 
         // TODO: remove after testing
         // add a sun
-        bodies[0].mass = SUN_MASS;
-        bodies[0].r = SUN_RADIUS;
-        bodies[0].x = bodies[0].y = 0;
-        bodies[0].vx = bodies[0].vy = 0;
+        bodies[0].state.mass = SUN_MASS;
+        bodies[0].state.r = SUN_RADIUS;
+        bodies[0].state.x = bodies[0].state.y = 0;
+        bodies[0].state.vx = bodies[0].state.vy = 0;
     }
 
     /**
@@ -124,8 +124,8 @@ public class NBody2d {
             double distance = Math.pow(Math.random(), 0.5) * limit;
 
             // calculate (x,y) coordinate of this point and assign to current body
-            body.x = Math.cos(angle) * distance;
-            body.y = Math.sin(angle) * distance;
+            body.state.x = Math.cos(angle) * distance;
+            body.state.y = Math.sin(angle) * distance;
         }
     }
 
@@ -137,7 +137,7 @@ public class NBody2d {
     public double getMaxForce() {
         double maxForce = 0;
         for (Body2d body : bodies) {
-            double currentForce = Math.sqrt(body.fx * body.fx + body.fy * body.fy);
+            double currentForce = Math.sqrt(body.state.fx * body.state.fx + body.state.fy * body.state.fy);
             if (currentForce > maxForce) maxForce = currentForce;
         }
         return maxForce;
@@ -153,17 +153,11 @@ public class NBody2d {
             body.updateForces(bodies);
         }
 
-        // update the positions of each body
+        // update the positions and colors of each body
         for (Body2d body : bodies) {
             body.updateVelocity(dt);
-            body.updatePosition(dt);
-
-            //TODO: reposition bodies who moved beyond the boundary
-        }
-
-        // update the colors of each body
-        for (Body2d body : bodies) {
             body.updateColor(getMaxForce());
+            body.updatePosition(dt);
         }
 
         // record the time elapsed

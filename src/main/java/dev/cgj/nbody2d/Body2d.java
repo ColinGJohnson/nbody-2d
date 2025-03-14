@@ -1,10 +1,6 @@
 package dev.cgj.nbody2d;
 
 import java.awt.Color;
-import java.awt.geom.Point2D;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * An object used to represent a body. Each body keeps track of its position, velocity, and the
@@ -15,23 +11,19 @@ import java.util.List;
 public class Body2d {
 
     /**
+     * Softening parameter (epsilon) determining the minimum distance between this body and another
+     * when calculating forces to avoid infinite forces at very short distances.
+     */
+    public static final double EPS = 3E4;
+
+    /**
      * Universal gravitational constant.
      */
     private static final double G = 6.673e-11;
-
-    public double x;     // x-distance from the origin (in meters)
-    public double y;     // y-distance from the origin (in meters)
-    public double vx;    // x-velocity (in meters per second)
-    public double vy;    // y-velocity (in meters per second)
-    public double fx;    // x-force (in Newtons)
-    public double fy;    // y-force (in Newtons)
-    public double r;     // physical radius of this body (in meters)
-    public double mass;  // the mass of this body (in kilograms)
-
-    public Color color;  // the color of this body (not used in calculations)
+    public final Body2dState state = new Body2dState();
 
     // maintain a history of the last 100 positions
-    BoundedQueue<Point2D.Double> positionHistory = new BoundedQueue<>(100);
+    BoundedQueue<Body2dState> history = new BoundedQueue<>(100);
 
     /**
      * Body Constructor; bodies initially have 0 velocity relative to the origin and have their
@@ -43,11 +35,11 @@ public class Body2d {
      * @param r the radius of this body
      */
     public Body2d(double x, double y, double mass, double  r) {
-        this.x = x;
-        this.y = y;
-        this.mass = mass;
-        this.r = r;
-        this.color = Color.WHITE;
+        this.state.x = x;
+        this.state.y = y;
+        this.state.mass = mass;
+        this.state.r = r;
+        this.state.color = Color.WHITE;
     }
 
     /**
@@ -58,11 +50,11 @@ public class Body2d {
      * @param limit a reference value
      */
     public void updateColor(double limit) {
-        double v = Math.sqrt(fx * fx + fy * fy);
+        double v = Math.sqrt(state.fx * state.fx + state.fy * state.fy);
         float h = 0.5f * (float)Math.pow((v/limit), 0.3);
         float s = 0.7f;
         float b = 1f;
-        color = Color.getHSBColor(h, s, b);
+        state.color = Color.getHSBColor(h, s, b);
     }
 
     /**
@@ -72,27 +64,25 @@ public class Body2d {
      * @param environment an ArrayList of other bodies whose gravity should be considered.
      */
     public void updateForces(Body2d[] environment) {
-
         //TODO: use multiple cores?
         //int cores = Runtime.getRuntime().availableProcessors();
         //System.out.println("Starting simulation using " + cores + " cores.");
 
         // reset forces before recalculating
-        fx = 0;
-        fy = 0;
+        state.fx = 0;
+        state.fy = 0;
 
         for (Body2d b : environment) {
 
             // don't calculate the force due to gravity between two bodies which are the same.
             if (b == this)  continue;
 
-            // TODO: switch from EPS softening parameter to physical size for bodies
-            // TODO: switch to using trig.
-            double EPS = 3E4;
-            double dist = distBetween(this.x, this.y, b.x, b.y);
-            double F = (G * this.mass * b.mass) / (dist * dist + EPS*EPS);
-            fx += F * ((b.x - this.x) / dist);
-            fy += F * ((b.y - this.y) / dist);
+            // The two bodies cannot be so close that they would overlap.
+            double minDistance = this.state.r + b.state.r;
+            double dist = Math.max(minDistance, distBetween(this.state.x, this.state.y, b.state.x, b.state.y));
+            double F = (G * this.state.mass * b.state.mass) / (dist * dist + EPS * EPS);
+            state.fx = state.fx + F * ((b.state.x - this.state.x) / dist);
+            state.fy = state.fy + F * ((b.state.y - this.state.y) / dist);
         }
     }
 
@@ -106,7 +96,9 @@ public class Body2d {
      * @return the distance (in meters) between the two points
      */
     public static double distBetween(double x1, double y1, double x2, double y2) {
-        return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
+        double dx = x2 - x1;
+        double dy = y2 - y1;
+        return Math.hypot(dx, dy);
     }
 
     /**
@@ -117,7 +109,7 @@ public class Body2d {
      * @return the distance (in meters) between bodies a and b
      */
     public static double distBetween(Body2d a, Body2d b) {
-        return distBetween(a.x, a.y, b.x, b.y);
+        return distBetween(a.state.x, a.state.y, b.state.x, b.state.y);
     }
 
     /**
@@ -129,7 +121,7 @@ public class Body2d {
      * @return the distance (in meters) from the body to the point
      */
     public static double distFrom(Body2d body, double x, double y) {
-        return distBetween(body.x, body.y, x, y);
+        return distBetween(body.state.x, body.state.y, x, y);
     }
 
     /**
@@ -150,8 +142,8 @@ public class Body2d {
      *           forces on this body should be applied
      */
     public void updateVelocity(double dt) {
-        vx += dt * fx / mass;
-        vy += dt * fy / mass;
+        state.vx = state.vx + dt * state.fx / state.mass;
+        state.vy = state.vy + dt * state.fy / state.mass;
     }
 
     /**
@@ -161,12 +153,12 @@ public class Body2d {
      * @param dt delta time
      */
     public void updatePosition(double dt) {
-        x += dt * vx;
-        y += dt * vy;
-        positionHistory.add(new Point2D.Double(x, y));
+        state.x = state.x + dt * state.vx;
+        state.y = state.y + dt * state.vy;
+        history.add(new Body2dState(state));
     }
 
-    public BoundedQueue<Point2D.Double> getPositionHistory() {
-        return positionHistory;
+    public BoundedQueue<Body2dState> getHistory() {
+        return history;
     }
 }
