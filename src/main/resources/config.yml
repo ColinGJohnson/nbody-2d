@@ -1,0 +1,6 @@
+
+# Number of bodies to start the simulation with
+nBodies: 1000
+
+# Number of times to update the simulation viewer per second
+fpsTarget: 60

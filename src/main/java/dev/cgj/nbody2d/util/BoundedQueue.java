@@ -1,4 +1,4 @@
-package dev.cgj.nbody2d;
+package dev.cgj.nbody2d.util;
 
 import java.util.ArrayDeque;
 import java.util.concurrent.locks.ReadWriteLock;

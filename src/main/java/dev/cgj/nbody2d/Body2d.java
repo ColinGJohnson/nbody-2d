@@ -1,5 +1,8 @@
 package dev.cgj.nbody2d;
 
+import dev.cgj.nbody2d.util.BoundedQueue;
+import lombok.Getter;
+
 import java.awt.Color;
 
 /**
@@ -19,11 +22,12 @@ public class Body2d {
     /**
      * Universal gravitational constant.
      */
-    private static final double G = 6.673e-11;
+    public static final double G = 6.673e-11;
+
     public final Body2dState state = new Body2dState();
 
-    // maintain a history of the last 100 positions
-    BoundedQueue<Body2dState> history = new BoundedQueue<>(100);
+    @Getter
+    private BoundedQueue<Body2dState> history = new BoundedQueue<>(100);
 
     /**
      * Body Constructor; bodies initially have 0 velocity relative to the origin and have their
@@ -35,11 +39,11 @@ public class Body2d {
      * @param r the radius of this body
      */
     public Body2d(double x, double y, double mass, double  r) {
-        this.state.x = x;
-        this.state.y = y;
-        this.state.mass = mass;
-        this.state.r = r;
-        this.state.color = Color.WHITE;
+        this.state.setX(x);
+        this.state.setY(y);
+        this.state.setMass(mass);
+        this.state.setR(r);
+        this.state.setColor(Color.WHITE);
     }
 
     /**
@@ -50,11 +54,11 @@ public class Body2d {
      * @param limit a reference value
      */
     public void updateColor(double limit) {
-        double v = Math.sqrt(state.fx * state.fx + state.fy * state.fy);
+        double v = Math.sqrt(state.getFx() * state.getFx() + state.getFy() * state.getFy());
         float h = 0.5f * (float)Math.pow((v/limit), 0.3);
         float s = 0.7f;
         float b = 1f;
-        state.color = Color.getHSBColor(h, s, b);
+        state.setColor(Color.getHSBColor(h, s, b));
     }
 
     /**
@@ -64,13 +68,10 @@ public class Body2d {
      * @param environment an ArrayList of other bodies whose gravity should be considered.
      */
     public void updateForces(Body2d[] environment) {
-        //TODO: use multiple cores?
-        //int cores = Runtime.getRuntime().availableProcessors();
-        //System.out.println("Starting simulation using " + cores + " cores.");
 
         // reset forces before recalculating
-        state.fx = 0;
-        state.fy = 0;
+        state.setFx(0);
+        state.setFy(0);
 
         for (Body2d b : environment) {
 
@@ -78,11 +79,11 @@ public class Body2d {
             if (b == this)  continue;
 
             // The two bodies cannot be so close that they would overlap.
-            double minDistance = this.state.r + b.state.r;
-            double dist = Math.max(minDistance, distBetween(this.state.x, this.state.y, b.state.x, b.state.y));
-            double F = (G * this.state.mass * b.state.mass) / (dist * dist + EPS * EPS);
-            state.fx = state.fx + F * ((b.state.x - this.state.x) / dist);
-            state.fy = state.fy + F * ((b.state.y - this.state.y) / dist);
+            double minDistance = this.state.getR() + b.state.getR();
+            double dist = Math.max(minDistance, distBetween(this.state.getX(), this.state.getY(), b.state.getX(), b.state.getY()));
+            double F = (G * this.state.getMass() * b.state.getMass()) / (dist * dist + EPS * EPS);
+            state.setFx(state.getFx() + F * ((b.state.getX() - this.state.getX()) / dist));
+            state.setFy(state.getFy() + F * ((b.state.getY() - this.state.getY()) / dist));
         }
     }
 
@@ -109,7 +110,7 @@ public class Body2d {
      * @return the distance (in meters) between bodies a and b
      */
     public static double distBetween(Body2d a, Body2d b) {
-        return distBetween(a.state.x, a.state.y, b.state.x, b.state.y);
+        return distBetween(a.state.getX(), a.state.getY(), b.state.getX(), b.state.getY());
     }
 
     /**
@@ -121,7 +122,7 @@ public class Body2d {
      * @return the distance (in meters) from the body to the point
      */
     public static double distFrom(Body2d body, double x, double y) {
-        return distBetween(body.state.x, body.state.y, x, y);
+        return distBetween(body.state.getX(), body.state.getY(), x, y);
     }
 
     /**
@@ -142,8 +143,8 @@ public class Body2d {
      *           forces on this body should be applied
      */
     public void updateVelocity(double dt) {
-        state.vx = state.vx + dt * state.fx / state.mass;
-        state.vy = state.vy + dt * state.fy / state.mass;
+        state.setVx(state.getVx() + dt * state.getFx() / state.getMass());
+        state.setVy(state.getVy() + dt * state.getFy() / state.getMass());
     }
 
     /**
@@ -153,12 +154,8 @@ public class Body2d {
      * @param dt delta time
      */
     public void updatePosition(double dt) {
-        state.x = state.x + dt * state.vx;
-        state.y = state.y + dt * state.vy;
+        state.setX(state.getX() + dt * state.getVx());
+        state.setY(state.getY() + dt * state.getVy());
         history.add(new Body2dState(state));
-    }
-
-    public BoundedQueue<Body2dState> getHistory() {
-        return history;
     }
 }

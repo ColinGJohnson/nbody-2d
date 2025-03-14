@@ -1,6 +1,11 @@
 *.class
+.gradle/
+build/
 
 # IntelliJ files
 .idea
 *.iml
 out
+
+# MacOS
+.DS_Store

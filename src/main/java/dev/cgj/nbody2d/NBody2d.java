@@ -1,15 +1,15 @@
 package dev.cgj.nbody2d;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.TimerTask;
 
 /**
- * A simple brute-force 2-dimensional n-body simulation using Newtonian Gravity.
- *
- * @author Colin Johnson
+ * Brute-force 2-dimensional Newtonian Gravity n-body simulation.
  */
 public class NBody2d {
 
-    // useful constants
     public static final double MOON_MASS = 7.347e10;   // moon mass (kilograms)
     public static final double EARTH_MASS = 5.972e24;  // mass of the earth (kilograms)
     public static final double EARTH_RADIUS = 6.356e6; // radius of the earth (meters)
@@ -17,56 +17,47 @@ public class NBody2d {
     public static final double SUN_RADIUS = 6.955e8;   // radius of the sun
     public static final double MARS_DIST = 2.3816e11;  // distance to Mars (meters)
 
-    // simulation parameters
-    private int n;                    // the number of bodies being simulated
-    private final Body2d[] bodies;    // Array of bodies
-    private final double boundary;    // the edge of this simulation's "universe"
-
-    // simulation timing
-    private final double dt;    // the amount of simulated time between steps (seconds)
-    boolean  autoStep;          // true when the simulation is automatically calling step();
-    java.util.Timer timer;      // timer for autoStep()
-
-    // simulation trackers
-    private long timeElapsed;   // the amount of simulated time that has passed so far (seconds)
+    /**
+     * The number of bodies being simulated
+     */
+    @Getter
+    private int n;
 
     /**
-     * Main method which creates and configures a {@link NBody2d} simulation.
-     *
-     * @param args if an integer is passed as an argument then it will determine the 'n' parameter.
+     * An array of {@link Body2d} objects representing the bodies participating in the simulation.
+     * Each body tracks its position, velocity, and the forces acting upon it. These objects
+     * are used to model the gravitational interactions between the bodies in the N-body simulation.
      */
-    public static void main(String[] args) {
+    @Getter
+    private final Body2d[] bodies;
 
-        // get 'n' from command line parameter, if one exists, otherwise use default value
-        int n = 500;
-        if (args.length > 0) {
-            try {
-                n = Integer.parseInt(args[0]);
-            } catch (NumberFormatException e) {
-                System.err.println("Error parsing 'n' from command line parameter.");
-            }
-        }
-        System.out.format("Starting simulation with n=%d bodies\n", n);
+    /**
+     * The edge of this simulation's universe.
+     */
+    @Getter
+    private final double boundary;
 
-        // create and configure the simulation
-        NBody2d sim = new NBody2d(MARS_DIST, 3600, n, EARTH_MASS, EARTH_RADIUS);
+    /**
+     * The amount of simulated time that has passed so far (seconds).
+     */
+    @Setter
+    @Getter
+    private long timeElapsed;
 
-        // create a window to view the current state of the simulation
-        NBody2dViewer viewer = new NBody2dViewer(sim);
+    /**
+     * The amount of simulated time between steps (seconds).
+     */
+    private final double dt;
 
-        // start the simulation
-        sim.autoStep(1000 / 60);
+    /**
+     * True when the simulation is automatically calling step().
+     */
+    boolean  autoStep;
 
-        // regularly update the viewer
-        new java.util.Timer().scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                if (viewer.isReady()) {
-                    viewer.update();
-                }
-            }
-        }, 0, 1000 / 60);
-    }
+    /**
+     * Timer for autoStep().
+     */
+    java.util.Timer timer;
 
     /**
      * NBody2d Constructor.
@@ -85,18 +76,18 @@ public class NBody2d {
         // populate the array with the specified number of bodies
         for (int i = 0; i < n; i ++) {
             bodies[i] = new Body2d(0, 0, mass, radius);
-            bodies[i].state.vx = 10000;
-            bodies[i].state.vy = 10000;
+            bodies[i].state.setVx(10000);
+            bodies[i].state.setVy(10000);
         }
 
         randomizePositions(boundary / 2);
 
-        // TODO: remove after testing
-        // add a sun
-        bodies[0].state.mass = SUN_MASS;
-        bodies[0].state.r = SUN_RADIUS;
-        bodies[0].state.x = bodies[0].state.y = 0;
-        bodies[0].state.vx = bodies[0].state.vy = 0;
+        bodies[0].state.setMass(SUN_MASS);
+        bodies[0].state.setR(SUN_RADIUS);
+        bodies[0].state.setX(0);
+        bodies[0].state.setY(0);
+        bodies[0].state.setVx(0);
+        bodies[0].state.setVy(0);
     }
 
     /**
@@ -124,8 +115,8 @@ public class NBody2d {
             double distance = Math.pow(Math.random(), 0.5) * limit;
 
             // calculate (x,y) coordinate of this point and assign to current body
-            body.state.x = Math.cos(angle) * distance;
-            body.state.y = Math.sin(angle) * distance;
+            body.state.setX(Math.cos(angle) * distance);
+            body.state.setY(Math.sin(angle) * distance);
         }
     }
 
@@ -137,7 +128,7 @@ public class NBody2d {
     public double getMaxForce() {
         double maxForce = 0;
         for (Body2d body : bodies) {
-            double currentForce = Math.sqrt(body.state.fx * body.state.fx + body.state.fy * body.state.fy);
+            double currentForce = Math.sqrt(body.state.getFx() * body.state.getFx() + body.state.getFy() * body.state.getFy());
             if (currentForce > maxForce) maxForce = currentForce;
         }
         return maxForce;
@@ -187,35 +178,5 @@ public class NBody2d {
     public void stopAutoStep() {
         timer.cancel();
         autoStep = false;
-    }
-
-    /**
-     * Get the number of bodies tracked in this simulation.
-     * @return the number of bodies
-     */
-    public int getN() {
-        return n;
-    }
-
-    /**
-     * Get the boundary of this simulation. No bodies are allows to exist beyond this distance
-     * from the origin.
-     *
-     * @return the distance, in meters, from the origin to the simulation's boundary
-     */
-    public double getBoundary() {
-        return boundary;
-    }
-
-    public Body2d[] getBodies() {
-        return bodies;
-    }
-
-    public long getTimeElapsed() {
-        return timeElapsed;
-    }
-
-    public void setTimeElapsed(long timeElapsed) {
-        this.timeElapsed = timeElapsed;
     }
 }

@@ -18,6 +18,7 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.awt.geom.Point2D;
 import java.time.Duration;
+import java.util.TimerTask;
 
 /**
  * Application to display and manipulates a 2-dimensional n-body simulation (NBody2d). A window
@@ -62,6 +63,17 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
             // set initial scale and pan now that the screen size is known
             setScaleToFit();
         });
+    }
+
+    public void run() {
+        new java.util.Timer().scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                if (isReady()) {
+                    update();
+                }
+            }
+        }, 0, 1000 / 60);
     }
 
     /**
@@ -210,10 +222,10 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
         drawCircle(g, center.x, center.y, distanceToPixels(sim.getBoundary()));
 
         for (Body2d body : sim.getBodies()) {
-            Point location = simToPixels(body.state.x, body.state.y);
+            Point location = simToPixels(body.state.getX(), body.state.getY());
 
-            g.setColor(body.state.color);
-            int radius = distanceToPixels(body.state.r);
+            g.setColor(body.state.getColor());
+            int radius = distanceToPixels(body.state.getR());
             if (radius < 1) radius = 1;
             drawCircle(g, location.x, location.y, radius);
             drawForceVector(g, body);
@@ -230,13 +242,13 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
      * @param body the body for which to draw the force vector
      */
     private void drawForceVector(Graphics g, Body2d body) {
-        Point bodyLocation = simToPixels(body.state.x, body.state.y);
+        Point bodyLocation = simToPixels(body.state.getX(), body.state.getY());
 
         // Normalize the force vector
-        double forceMagnitude = Math.sqrt(body.state.fx * body.state.fx + body.state.fy * body.state.fy);
+        double forceMagnitude = Math.sqrt(body.state.getFx() * body.state.getFx() + body.state.getFy() * body.state.getFy());
         if (forceMagnitude != 0) {
-            double normalizedFx = body.state.fx / forceMagnitude;
-            double normalizedFy = body.state.fy / forceMagnitude;
+            double normalizedFx = body.state.getFx() / forceMagnitude;
+            double normalizedFy = body.state.getFy() / forceMagnitude;
 
             // Calculate the endpoint of the vector
             int vectorLength = 20;
@@ -270,11 +282,11 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
                 g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
 
                 if (color) {
-                    g.setColor(state.color);
+                    g.setColor(state.getColor());
                 }
             }
 
-            Point current = simToPixels(state.x, state.y);
+            Point current = simToPixels(state.getX(), state.getY());
             if (prev[0] != null) {
                 g.drawLine(prev[0].x, prev[0].y, current.x, current.y);
             }
