@@ -1,6 +1,8 @@
 # nbody-2d
 A simple N-body simulation implementing Newtonian gravity on a 2D field of dynamically colored particles.
 
+![image](https://github.com/user-attachments/assets/0fec02e0-5486-4ed8-b904-848d8c94ceca)
+
 ## Usage
 - **Left Mouse Button** - toggles attraction towards cursor.  
 - **Right Mouse Button** - places a static gravity point that particles are attracted to.  
