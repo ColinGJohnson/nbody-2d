@@ -8,8 +8,6 @@ import java.awt.Color;
 /**
  * An object used to represent a body. Each body keeps track of its position, velocity, and the
  * forces acting on it.
- *
- * @author Colin Johnson
  */
 public class Body2d {
 
@@ -99,7 +97,9 @@ public class Body2d {
     public static double distBetween(double x1, double y1, double x2, double y2) {
         double dx = x2 - x1;
         double dy = y2 - y1;
-        return Math.hypot(dx, dy);
+
+        // Faster than Math.hypot(dx, dy), but with worse handling of overflow or underflow.
+        return Math.sqrt(dx * dx + dy * dy);
     }
 
     /**

@@ -16,6 +16,7 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.time.Duration;
 import java.util.TimerTask;
@@ -23,11 +24,10 @@ import java.util.TimerTask;
 /**
  * Application to display and manipulates a 2-dimensional n-body simulation (NBody2d). A window
  * will be created immediately upon instantiation.
- *
- * @author Colin Johnson
  */
 public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWheelListener, KeyListener {
 
+    private long frameTime;             // how long it took to draw the last frame, in nanoseconds
     private final NBody2d sim;          // the simulation being displayed
     private JFrame frame;               // the frame that the simulation is displayed in
     private boolean fullScreen = false; // is the viewer full screen currently?
@@ -69,7 +69,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
         new java.util.Timer().scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                if (isReady()) {
+                if (ready) {
                     update();
                 }
             }
@@ -206,6 +206,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+        long startTime = System.nanoTime();
 
         // dark background
         g.setColor(new Color(30, 30, 30));
@@ -216,6 +217,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
         g.drawString("tracked particles: " + sim.getN(), 20, 40);
         g.drawString(String.format("scale: %.2e meters / pixel", scale), 20, 55);
         g.drawString("simulated time: " + secondsToString(sim.getTimeElapsed()), 20, 70);
+        g.drawString("viewer update: " + Duration.ofNanos(frameTime).toMillis() + "ms", 20, 85);
 
         // draw border circle
         Point center = simToPixels(0, 0);
@@ -231,8 +233,11 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
             drawForceVector(g, body);
 
             // Swing uses Graphics2D internally, so this downcast is safe
-            drawHistoryTrail((Graphics2D) g, body, false);
+            drawHistoryTrail((Graphics2D) g, body, true);
         }
+        
+        // Smooth measurement by averaging with previous
+        frameTime = (frameTime + (System.nanoTime() - startTime)) / 2;
     }
 
     /**
@@ -269,33 +274,28 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
      * @param body the body whose position history is to be drawn
      */
     private void drawHistoryTrail(Graphics2D g, Body2d body, boolean color) {
-        final Point[] prev = {null};
-        g.setColor(Color.GRAY);
+        final int SEGMENT_LENGTH = 20;
+        Path2D path = new Path2D.Double();
 
         body.getHistory().enumerate((i, state) -> {
+            Point current = simToPixels(state.getX(), state.getY());
 
-            // Updating color + opacity for every history point is slow, so use every 20th element
-            if (i % 20 == 0) {
+            if (i == 0) {
+                path.moveTo(current.x, current.y);
+            } else {
+                path.lineTo(current.x, current.y);
+            }
 
-                // Fade the line's opacity the start to the end
+            // Updating color + opacity for every history point is slow, so use 20 element segments
+            if (i % SEGMENT_LENGTH == 0 || i == body.getHistory().size() - 1) {
                 float opacity = i / (float) body.getHistory().size();
                 g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
-
-                if (color) {
-                    g.setColor(state.getColor());
-                }
+                g.setColor(color ? state.getColor() : Color.GRAY);
+                g.draw(path);
+                path.reset();
+                path.moveTo(current.x, current.y);
             }
-
-            Point current = simToPixels(state.getX(), state.getY());
-            if (prev[0] != null) {
-                g.drawLine(prev[0].x, prev[0].y, current.x, current.y);
-            }
-            
-            prev[0] = current;
         });
-
-        // Reset opacity to 100%
-        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
     }
 
     /**
@@ -555,9 +555,5 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
         Point newCenter = simToPixels(x, y);
         pan.x += newCenter.x - center.x;
         pan.y -= newCenter.y - center.y;
-    }
-
-    public boolean isReady() {
-        return ready;
     }
 }
