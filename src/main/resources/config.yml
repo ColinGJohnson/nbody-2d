@@ -1,10 +1,30 @@
+viewer:
+  repaintInterval: 20
+  autoStepInterval: 20
 
-# Number of bodies to start the simulation with
-nBodies: 20
+simulation:
+  boundary: 2.3816e11
+  dt: 3600
 
-# Number of times to update the simulation viewer per second
-fpsTarget: 60
+  initialState:
+    - n: 1
+      x: 0
+      y: 0
+      positionJitter: 0
+      vx: 0
+      vy: 0
+      velocityJitter: 0
+      r: 6.955e8
+      radiusJitter: 0
+      mass: 1.989e30
 
-bodies: [
-
-]
+    - n: 1000
+      x: 0
+      y: 0
+      positionJitter: 2.3816e11
+      vx: 10000
+      vy: 10000
+      velocityJitter: 0
+      r: 6.356e6
+      radiusJitter: 0
+      mass: 5.972e24

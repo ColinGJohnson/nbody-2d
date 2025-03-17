@@ -8,10 +8,13 @@ import java.awt.Color;
 public class Body2dState {
     private double x;     // x-distance from the origin (in meters)
     private double y;     // y-distance from the origin (in meters)
+
     private double vx;    // x-velocity (in meters per second)
     private double vy;    // y-velocity (in meters per second)
+
     private double fx;    // x-force (in Newtons)
     private double fy;    // y-force (in Newtons)
+
     private double r;     // physical radius of this body (in meters)
     private double mass;  // the mass of this body (in kilograms)
     private Color color;  // the color of this body (not used in calculations)

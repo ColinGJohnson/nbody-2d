@@ -36,7 +36,7 @@ public class Body2d {
      * @param mass the mass of this body
      * @param r the radius of this body
      */
-    public Body2d(double x, double y, double mass, double  r) {
+    public Body2d(double x, double y, double mass, double r) {
         this.state.setX(x);
         this.state.setY(y);
         this.state.setMass(mass);

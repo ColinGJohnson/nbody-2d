@@ -1,13 +1,17 @@
 package dev.cgj.nbody2d;
 
+import dev.cgj.nbody2d.config.InitialBodyConfig;
+import dev.cgj.nbody2d.config.SimulationConfig;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.TimerTask;
 
 /**
  * Brute-force 2-dimensional Newtonian Gravity n-body simulation.
  */
+@Slf4j
 public class NBody2d {
 
     public static final double MOON_MASS = 7.347e10;   // moon mass (kilograms)
@@ -17,11 +21,11 @@ public class NBody2d {
     public static final double SUN_RADIUS = 6.955e8;   // radius of the sun
     public static final double MARS_DIST = 2.3816e11;  // distance to Mars (meters)
 
-    /**
-     * The number of bodies being simulated
-     */
     @Getter
-    private int n;
+    private final SimulationConfig config;
+
+    @Getter
+    private long stepTime;
 
     /**
      * An array of {@link Body2d} objects representing the bodies participating in the simulation.
@@ -29,13 +33,7 @@ public class NBody2d {
      * are used to model the gravitational interactions between the bodies in the N-body simulation.
      */
     @Getter
-    private final Body2d[] bodies;
-
-    /**
-     * The edge of this simulation's universe.
-     */
-    @Getter
-    private final double boundary;
+    private Body2d[] bodies;
 
     /**
      * The amount of simulated time that has passed so far (seconds).
@@ -45,14 +43,10 @@ public class NBody2d {
     private long timeElapsed;
 
     /**
-     * The amount of simulated time between steps (seconds).
-     */
-    private final double dt;
-
-    /**
      * True when the simulation is automatically calling step().
      */
-    boolean  autoStep;
+    @Getter
+    boolean running;
 
     /**
      * Timer for autoStep().
@@ -62,62 +56,47 @@ public class NBody2d {
     /**
      * NBody2d Constructor.
      *
-     * @param boundary the boundary of the simulation.
-     * @param dt delta time (seconds)
-     * @param n the number of bodies to simulate
-     * @param mass the mass for the simulated bodies
+     * @param config Simulation configuration including boundary, deta time, and initial bodies.
      */
-    public NBody2d(double boundary, double dt, int n, double mass, double radius) {
-        this.boundary = boundary;
-        this.dt = dt;
-        this.n = n;
-        bodies = new Body2d[n];
-
-        // populate the array with the specified number of bodies
-        for (int i = 0; i < n; i ++) {
-            bodies[i] = new Body2d(0, 0, mass, radius);
-            bodies[i].state.setVx(10000);
-            bodies[i].state.setVy(10000);
-        }
-
-        randomizePositions(boundary / 2);
-
-        bodies[0].state.setMass(SUN_MASS);
-        bodies[0].state.setR(SUN_RADIUS);
-        bodies[0].state.setX(0);
-        bodies[0].state.setY(0);
-        bodies[0].state.setVx(0);
-        bodies[0].state.setVy(0);
+    public NBody2d(SimulationConfig config) {
+        this.config = config;
+        resetBodies();
     }
 
-    /**
-     * Constructs an NBody2d simulation using a preexisting set of bodies.
-     *
-     * @param boundary the boundary of the simulation.
-     * @param dt delta time (seconds)
-     * @param bodies an array of bodies to run the simulation
-     */
-    public NBody2d(double boundary, double dt, Body2d[] bodies) {
-        this.boundary = boundary;
-        this.dt = dt;
-        this.bodies = bodies;
+    public void resetBodies() {
+        int n = config.getInitialState().stream()
+                .mapToInt(InitialBodyConfig::getN)
+                .sum();
+        bodies = new Body2d[n];
+
+        int i = 0;
+        for (InitialBodyConfig init : config.getInitialState()) {
+            for (int j = 0; j < init.getN(); j++) {
+                bodies[i] = new Body2d(init.getX(), init.getY(), init.getMass(), init.getR());
+                bodies[i].state.setVx(init.getVx());
+                bodies[i].state.setVy(init.getVy());
+                randomizePosition(bodies[i], init.getPositionJitter());
+                i++;
+            }
+        }
     }
 
     /**
      * Relocates this simulation's bodies to 'n' random locations with both coordinates within
      * 'boundary' meters of the origin.
      */
-    public void randomizePositions(double limit) {
-        for (Body2d body : bodies) {
-
-            // pick a random angle in [0, 2pi) and a random distance in [0, boundary)
-            double angle = Math.random() * (2 * Math.PI);
-            double distance = Math.pow(Math.random(), 0.5) * limit;
-
-            // calculate (x,y) coordinate of this point and assign to current body
-            body.state.setX(Math.cos(angle) * distance);
-            body.state.setY(Math.sin(angle) * distance);
+    public void randomizePosition(Body2d body, double limit) {
+        if (limit < 0) {
+            throw new IllegalArgumentException("limit must be greater than or equal to 0");
         }
+
+        // pick a random angle in [0, 2pi) and a random distance in [0, boundary)
+        double angle = Math.random() * (2 * Math.PI);
+        double distance = Math.pow(Math.random(), 0.5) * limit;
+
+        // calculate (x,y) coordinate of this point and assign to current body
+        body.state.setX(Math.cos(angle) * distance);
+        body.state.setY(Math.sin(angle) * distance);
     }
 
     /**
@@ -138,6 +117,7 @@ public class NBody2d {
      * Advances the simulation by one time step.
      */
     public void step() {
+        long startTime = System.nanoTime();
 
         // update the forces acting on each body
         for (Body2d body : bodies) {
@@ -146,13 +126,16 @@ public class NBody2d {
 
         // update the positions and colors of each body
         for (Body2d body : bodies) {
-            body.updateVelocity(dt);
+            body.updateVelocity(config.getDt());
             body.updateColor(getMaxForce());
-            body.updatePosition(dt);
+            body.updatePosition(config.getDt());
         }
 
         // record the time elapsed
-        timeElapsed += (long) dt;
+        timeElapsed += (long) config.getDt();
+
+        // Smooth measurement by averaging with previous
+        stepTime = (stepTime + (System.nanoTime() - startTime)) / 2;
     }
 
     /**
@@ -169,7 +152,7 @@ public class NBody2d {
                 step();
             }
         }, 0, stepDelay);
-        autoStep = true;
+        running = true;
     }
 
     /**
@@ -177,6 +160,6 @@ public class NBody2d {
      */
     public void stopAutoStep() {
         timer.cancel();
-        autoStep = false;
+        running = false;
     }
 }

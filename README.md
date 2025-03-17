@@ -1,5 +1,5 @@
 # nbody-2d
-A simple N-body simulation implementing Newtonian gravity on a 2D field of dynamically colored particles.
+A simple [N-body simulation](https://en.wikipedia.org/wiki/N-body_simulation) implementing Newtonian gravity on a 2D field of dynamically colored particles.
 
 ![image](https://github.com/user-attachments/assets/0fec02e0-5486-4ed8-b904-848d8c94ceca)
 

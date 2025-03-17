@@ -1,4 +1,8 @@
-package dev.cgj.nbody2d;
+package dev.cgj.nbody2d.viewer;
+
+import dev.cgj.nbody2d.Body2d;
+import dev.cgj.nbody2d.NBody2d;
+import dev.cgj.nbody2d.config.ViewerConfig;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -27,6 +31,8 @@ import java.util.TimerTask;
  */
 public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWheelListener, KeyListener {
 
+    private final ViewerConfig config;
+
     private long frameTime;             // how long it took to draw the last frame, in nanoseconds
     private final NBody2d sim;          // the simulation being displayed
     private JFrame frame;               // the frame that the simulation is displayed in
@@ -42,11 +48,13 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
     /**
      * NBody2dViewer Constructor. Creates and configures display panel.
      *
+     * @param config configuration for the viewer
      * @param sim the simulation to display
      */
-    public NBody2dViewer(NBody2d sim) {
+    public NBody2dViewer(ViewerConfig config, NBody2d sim) {
         super(true);
 
+        this.config = config;
         this.sim = sim;
         this.pan = new Point(0,0);
 
@@ -116,7 +124,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
      */
     public double getScaleToFit() {
         double constraint = Math.min(frame.getWidth(), frame.getHeight());
-        double boundary = sim.getBoundary();
+        double boundary = sim.getConfig().getBoundary();
         return (boundary * 2) / constraint;
     }
 
@@ -214,14 +222,15 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
 
         // draw debug info
         g.setColor(Color.WHITE);
-        g.drawString("tracked particles: " + sim.getN(), 20, 40);
+        g.drawString("tracked particles: " + sim.getBodies().length, 20, 40);
         g.drawString(String.format("scale: %.2e meters / pixel", scale), 20, 55);
-        g.drawString("simulated time: " + secondsToString(sim.getTimeElapsed()), 20, 70);
-        g.drawString("viewer update: " + Duration.ofNanos(frameTime).toMillis() + "ms", 20, 85);
+        g.drawString("sim elapsed time: " + secondsToString(sim.getTimeElapsed()), 20, 70);
+        g.drawString("sim step time: " + Duration.ofNanos(sim.getStepTime()).toMillis() + "ms", 20, 85);
+        g.drawString("viewer frame time: " + Duration.ofNanos(frameTime).toMillis() + "ms", 20, 100);
 
         // draw border circle
         Point center = simToPixels(0, 0);
-        drawCircle(g, center.x, center.y, distanceToPixels(sim.getBoundary()));
+        drawCircle(g, center.x, center.y, distanceToPixels(sim.getConfig().getBoundary()));
 
         for (Body2d body : sim.getBodies()) {
             Point location = simToPixels(body.state.getX(), body.state.getY());
@@ -230,7 +239,9 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
             int radius = distanceToPixels(body.state.getR());
             if (radius < 1) radius = 1;
             drawCircle(g, location.x, location.y, radius);
-            drawForceVector(g, body);
+
+            // TODO: Bind key to enable
+            // drawForceVector(g, body);
 
             // Swing uses Graphics2D internally, so this downcast is safe
             drawHistoryTrail((Graphics2D) g, body, true);
@@ -480,10 +491,8 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
         if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
             System.exit(0);
 
-        } else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-
         } else if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-            if (sim.autoStep) {
+            if (sim.isRunning()) {
                 sim.stopAutoStep();
             } else {
                 sim.autoStep(1000 / 60);
@@ -504,7 +513,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
             pan.x -= 20;
 
         } else if (e.getKeyCode() == KeyEvent.VK_R) {
-            sim.randomizePositions(sim.getBoundary() / 2);
+            sim.resetBodies();
 
         } else if (e.getKeyCode() == KeyEvent.VK_F11) {
             toggleFullScreen();
