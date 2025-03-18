@@ -1,0 +1,37 @@
+viewer:
+  repaintInterval: 20
+  autoStepInterval: 20
+
+simulation:
+  boundary: 1e12
+  dt: 1800 # Half a day
+
+  initialState:
+    # Star 1
+    - n: 1
+      x: -7.5e10
+      y: 0
+      vx: 0
+      vy: 20000
+      r: 7e8
+      mass: 1.2e30
+
+    # Star 2
+    - n: 1
+      x: 7.5e10
+      y: 0
+      vx: 0
+      vy: -20000
+      r: 7e8
+      mass: 1.0e30
+
+    # Objects to orbit both stars
+    - n: 200
+      x: 0
+      y: 0
+      positionJitter: 1e10
+      vx: 0
+      vy: 0
+      velocityJitter: 300
+      r: 1e3
+      mass: 1e18

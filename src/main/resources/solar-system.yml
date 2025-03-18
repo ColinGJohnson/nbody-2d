@@ -1,0 +1,90 @@
+viewer:
+  repaintInterval: 20
+  autoStepInterval: 20
+
+simulation:
+  boundary: 4.503e12 # Boundary size for the simulation
+  dt: 86400           # Time step in seconds (1 day)
+
+  initialState:
+
+    # Sun
+    - n: 1
+      x: 0
+      y: 0
+      vx: 0
+      vy: 0
+      r: 6.955e8 # Radius in meters
+      mass: 1.989e30 # Mass in kilograms
+
+    # Mercury
+    - n: 1
+      x: 0
+      y: 57.91e9 # 57.91 million km (distance from the Sun)
+      vx: 47360 # 47.36 km/s (orbital speed around the Sun)
+      vy: 0
+      r: 2.4397e6 # Radius in meters
+      mass: 3.3011e23 # Mass in kg
+
+    # Venus
+    - n: 1
+      x: 0
+      y: 107.66e9 # 107.66 million km (distance from the Sun)
+      vx: 35020 # 35.02 km/s (orbital speed)
+      vy: 0
+      r: 6.0518e6 # Radius in meters
+      mass: 4.867e24 # Mass in kg
+
+    # Earth
+    - n: 1
+      x: 0
+      y: 148.85e9 # 148.85 million km (distance from the Sun)
+      vx: 30000 # 30 km/s (orbital speed)
+      vy: 0
+      r: 6.356e6 # Radius in meters
+      mass: 5.972e24 # Mass in kg
+
+    # Mars
+    - n: 1
+      x: 0
+      y: 227.94e9 # 227.94 million km (distance from the Sun)
+      vx: 24070 # 24.07 km/s (orbital speed)
+      vy: 0
+      r: 3.3895e6 # Radius in meters
+      mass: 6.417e23 # Mass in kg
+
+    # Jupiter
+    - n: 1
+      x: 0
+      y: 778.57e9 # 778.57 million km (distance from the Sun)
+      vx: 13070 # 13.07 km/s (orbital speed)
+      vy: 0
+      r: 6.9911e7 # Radius in meters
+      mass: 1.898e27 # Mass in kg
+
+    # Saturn
+    - n: 1
+      x: 0
+      y: 1.4294e12 # 1.4294 billion km (distance from the Sun)
+      vx: 9690 # 9.69 km/s (orbital speed)
+      vy: 0
+      r: 5.8232e7 # Radius in meters
+      mass: 5.683e26 # Mass in kg
+
+    # Uranus
+    - n: 1
+      x: 0
+      y: 2.877e12 # 2.877 billion km (distance from the Sun)
+      vx: 6810 # 6.81 km/s (orbital speed)
+      vy: 0
+      r: 2.5362e7 # Radius in meters
+      mass: 8.681e25 # Mass in kg
+
+    # Neptune
+    - n: 1
+      x: 0
+      y: 4.503e12 # 4.503 billion km (distance from the Sun)
+      vx: 5430 # 5.43 km/s (orbital speed)
+      vy: 0
+      r: 2.4622e7 # Radius in meters
+      mass: 1.024e26 # Mass in kg
