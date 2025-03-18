@@ -1,4 +1,4 @@
-package dev.cgj.nbody2d;
+package dev.cgj.nbody2d.simulation;
 
 import dev.cgj.nbody2d.util.BoundedQueue;
 import lombok.Getter;
@@ -9,7 +9,7 @@ import java.awt.Color;
  * An object used to represent a body. Each body keeps track of its position, velocity, and the
  * forces acting on it.
  */
-public class Body2d {
+public class Body {
 
     /**
      * Softening parameter (epsilon) determining the minimum distance between this body and another
@@ -22,10 +22,10 @@ public class Body2d {
      */
     public static final double G = 6.673e-11;
 
-    public final Body2dState state = new Body2dState();
+    public final BodyState state = new BodyState();
 
     @Getter
-    private BoundedQueue<Body2dState> history = new BoundedQueue<>(100);
+    private BoundedQueue<BodyState> history = new BoundedQueue<>(100);
 
     /**
      * Body Constructor; bodies initially have 0 velocity relative to the origin and have their
@@ -36,7 +36,7 @@ public class Body2d {
      * @param mass the mass of this body
      * @param r the radius of this body
      */
-    public Body2d(double x, double y, double mass, double r) {
+    public Body(double x, double y, double mass, double r) {
         this.state.setX(x);
         this.state.setY(y);
         this.state.setMass(mass);
@@ -65,13 +65,13 @@ public class Body2d {
      *
      * @param environment an ArrayList of other bodies whose gravity should be considered.
      */
-    public void updateForces(Body2d[] environment) {
+    public void updateForces(Body[] environment) {
 
         // reset forces before recalculating
         state.setFx(0);
         state.setFy(0);
 
-        for (Body2d b : environment) {
+        for (Body b : environment) {
 
             // don't calculate the force due to gravity between two bodies which are the same.
             if (b == this)  continue;
@@ -109,7 +109,7 @@ public class Body2d {
      * @param b the second body
      * @return the distance (in meters) between bodies a and b
      */
-    public static double distBetween(Body2d a, Body2d b) {
+    public static double distBetween(Body a, Body b) {
         return distBetween(a.state.getX(), a.state.getY(), b.state.getX(), b.state.getY());
     }
 
@@ -121,7 +121,7 @@ public class Body2d {
      * @param y the y position of the point
      * @return the distance (in meters) from the body to the point
      */
-    public static double distFrom(Body2d body, double x, double y) {
+    public static double distFrom(Body body, double x, double y) {
         return distBetween(body.state.getX(), body.state.getY(), x, y);
     }
 
@@ -131,7 +131,7 @@ public class Body2d {
      * @param body The body to calculate distance to.
      * @return the distance (in meters) from the body to the origin.
      */
-    public static double distFromOrigin(Body2d body) {
+    public static double distFromOrigin(Body body) {
         return distFrom(body, 0, 0);
     }
 
@@ -156,6 +156,6 @@ public class Body2d {
     public void updatePosition(double dt) {
         state.setX(state.getX() + dt * state.getVx());
         state.setY(state.getY() + dt * state.getVy());
-        history.add(new Body2dState(state));
+        history.add(new BodyState(state));
     }
 }

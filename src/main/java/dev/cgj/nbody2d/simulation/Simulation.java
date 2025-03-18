@@ -1,4 +1,4 @@
-package dev.cgj.nbody2d;
+package dev.cgj.nbody2d.simulation;
 
 import dev.cgj.nbody2d.config.InitialBodyConfig;
 import dev.cgj.nbody2d.config.SimulationConfig;
@@ -12,7 +12,7 @@ import java.util.TimerTask;
  * Brute-force 2-dimensional Newtonian Gravity n-body simulation.
  */
 @Slf4j
-public class NBody2d {
+public class Simulation {
 
     public static final double MOON_MASS = 7.347e10;   // moon mass (kilograms)
     public static final double EARTH_MASS = 5.972e24;  // mass of the earth (kilograms)
@@ -28,12 +28,12 @@ public class NBody2d {
     private long stepTime;
 
     /**
-     * An array of {@link Body2d} objects representing the bodies participating in the simulation.
+     * An array of {@link Body} objects representing the bodies participating in the simulation.
      * Each body tracks its position, velocity, and the forces acting upon it. These objects
      * are used to model the gravitational interactions between the bodies in the N-body simulation.
      */
     @Getter
-    private Body2d[] bodies;
+    private Body[] bodies;
 
     /**
      * The amount of simulated time that has passed so far (seconds).
@@ -58,7 +58,7 @@ public class NBody2d {
      *
      * @param config Simulation configuration including boundary, deta time, and initial bodies.
      */
-    public NBody2d(SimulationConfig config) {
+    public Simulation(SimulationConfig config) {
         this.config = config;
         resetBodies();
     }
@@ -67,12 +67,12 @@ public class NBody2d {
         int n = config.getInitialState().stream()
                 .mapToInt(InitialBodyConfig::getN)
                 .sum();
-        bodies = new Body2d[n];
+        bodies = new Body[n];
 
         int i = 0;
         for (InitialBodyConfig init : config.getInitialState()) {
             for (int j = 0; j < init.getN(); j++) {
-                bodies[i] = new Body2d(init.getX(), init.getY(), init.getMass(), init.getR());
+                bodies[i] = new Body(init.getX(), init.getY(), init.getMass(), init.getR());
                 bodies[i].state.setVx(init.getVx());
                 bodies[i].state.setVy(init.getVy());
                 randomizePosition(bodies[i], init.getPositionJitter());
@@ -82,12 +82,15 @@ public class NBody2d {
     }
 
     /**
-     * Relocates this simulation's bodies to 'n' random locations with both coordinates within
-     * 'boundary' meters of the origin.
+     * Moves the given body in a random direction within 'limit' meters of its original position.
      */
-    public void randomizePosition(Body2d body, double limit) {
+    public void randomizePosition(Body body, double limit) {
         if (limit < 0) {
             throw new IllegalArgumentException("limit must be greater than or equal to 0");
+        }
+
+        if (limit == 0) {
+            return;
         }
 
         // pick a random angle in [0, 2pi) and a random distance in [0, boundary)
@@ -100,13 +103,13 @@ public class NBody2d {
     }
 
     /**
-     * Get the maximum force acting on any {@link Body2d} in the simulation.
+     * Get the maximum force acting on any {@link Body} in the simulation.
      *
      * @return The maximum force in Newtons.
      */
     public double getMaxForce() {
         double maxForce = 0;
-        for (Body2d body : bodies) {
+        for (Body body : bodies) {
             double currentForce = Math.sqrt(body.state.getFx() * body.state.getFx() + body.state.getFy() * body.state.getFy());
             if (currentForce > maxForce) maxForce = currentForce;
         }
@@ -120,12 +123,12 @@ public class NBody2d {
         long startTime = System.nanoTime();
 
         // update the forces acting on each body
-        for (Body2d body : bodies) {
+        for (Body body : bodies) {
             body.updateForces(bodies);
         }
 
         // update the positions and colors of each body
-        for (Body2d body : bodies) {
+        for (Body body : bodies) {
             body.updateVelocity(config.getDt());
             body.updateColor(getMaxForce());
             body.updatePosition(config.getDt());

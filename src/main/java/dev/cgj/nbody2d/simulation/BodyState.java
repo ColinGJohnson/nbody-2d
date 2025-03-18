@@ -1,11 +1,11 @@
-package dev.cgj.nbody2d;
+package dev.cgj.nbody2d.simulation;
 
 import lombok.Data;
 
 import java.awt.Color;
 
 @Data
-public class Body2dState {
+public class BodyState {
     private double x;     // x-distance from the origin (in meters)
     private double y;     // y-distance from the origin (in meters)
 
@@ -19,9 +19,9 @@ public class Body2dState {
     private double mass;  // the mass of this body (in kilograms)
     private Color color;  // the color of this body (not used in calculations)
 
-    public Body2dState() { }
+    public BodyState() { }
 
-    public Body2dState(Body2dState other) {
+    public BodyState(BodyState other) {
         this.setX(other.getX());
         this.setY(other.getY());
         this.setVx(other.getVx());

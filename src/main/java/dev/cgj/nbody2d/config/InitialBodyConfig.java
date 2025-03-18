@@ -53,7 +53,7 @@ public class InitialBodyConfig {
     double radiusJitter;
 
     /**
-     * Initial mass for the body.
+     * Initial mass for the body (in kilograms).
      */
     double mass;
 }

@@ -1,7 +1,7 @@
-package dev.cgj.nbody2d.viewer;
+package dev.cgj.nbody2d;
 
-import dev.cgj.nbody2d.Body2d;
-import dev.cgj.nbody2d.NBody2d;
+import dev.cgj.nbody2d.simulation.Body;
+import dev.cgj.nbody2d.simulation.Simulation;
 import dev.cgj.nbody2d.config.ViewerConfig;
 
 import javax.swing.JFrame;
@@ -34,7 +34,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
     private final ViewerConfig config;
 
     private long frameTime;             // how long it took to draw the last frame, in nanoseconds
-    private final NBody2d sim;          // the simulation being displayed
+    private final Simulation sim;          // the simulation being displayed
     private JFrame frame;               // the frame that the simulation is displayed in
     private boolean fullScreen = false; // is the viewer full screen currently?
     private double scale;               // simulation meters per on-screen pixel
@@ -51,7 +51,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
      * @param config configuration for the viewer
      * @param sim the simulation to display
      */
-    public NBody2dViewer(ViewerConfig config, NBody2d sim) {
+    public NBody2dViewer(ViewerConfig config, Simulation sim) {
         super(true);
 
         this.config = config;
@@ -232,7 +232,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
         Point center = simToPixels(0, 0);
         drawCircle(g, center.x, center.y, distanceToPixels(sim.getConfig().getBoundary()));
 
-        for (Body2d body : sim.getBodies()) {
+        for (Body body : sim.getBodies()) {
             Point location = simToPixels(body.state.getX(), body.state.getY());
 
             g.setColor(body.state.getColor());
@@ -257,7 +257,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
      * @param g    the graphics context used for drawing
      * @param body the body for which to draw the force vector
      */
-    private void drawForceVector(Graphics g, Body2d body) {
+    private void drawForceVector(Graphics g, Body body) {
         Point bodyLocation = simToPixels(body.state.getX(), body.state.getY());
 
         // Normalize the force vector
@@ -284,7 +284,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
      * @param g the graphics context used to draw the position history
      * @param body the body whose position history is to be drawn
      */
-    private void drawHistoryTrail(Graphics2D g, Body2d body, boolean color) {
+    private void drawHistoryTrail(Graphics2D g, Body body, boolean color) {
         final int SEGMENT_LENGTH = 20;
         Path2D path = new Path2D.Double();
 
