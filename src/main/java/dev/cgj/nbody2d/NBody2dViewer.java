@@ -34,12 +34,15 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
     private final ViewerConfig config;
 
     private long frameTime;             // how long it took to draw the last frame, in nanoseconds
-    private final Simulation sim;          // the simulation being displayed
+    private final Simulation sim;       // the simulation being displayed
     private JFrame frame;               // the frame that the simulation is displayed in
     private boolean fullScreen = false; // is the viewer full screen currently?
     private double scale;               // simulation meters per on-screen pixel
     private boolean ready = false;      // is the viewer ready to display graphics?
 
+    private boolean historyTrails;      // should trails be drawn?
+    private boolean colorTrails;        // should trails be colored?
+    private boolean forceVectors;       // should force vectors be rendered?
     private boolean isPanning = false;  // is the user currently panning? (right mouse button)
     private Point panStartMouse;        // mouse position at start of pan
     private Point panStart;             // pan position at start of pan
@@ -56,7 +59,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
 
         this.config = config;
         this.sim = sim;
-        this.pan = new Point(0,0);
+        this.pan = new Point(0, 0);
 
         // add mouse and keyboard event listeners to this component
         setFocusable(true);
@@ -139,8 +142,8 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
     /**
      * Get the center of the window in pixels from the top left of the window.
      * <p>
-     *   This is also the location where the origin (0,0) in the simulation should be drawn assuming
-     *   the user hasn't yet panned (panX = panY = 0).
+     * This is also the location where the origin (0,0) in the simulation should be drawn assuming
+     * the user hasn't yet panned (panX = panY = 0).
      * </p>
      */
     private Point getScreenCenter() {
@@ -240,13 +243,16 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
             if (radius < 1) radius = 1;
             drawCircle(g, location.x, location.y, radius);
 
-            // TODO: Bind key to enable
-            // drawForceVector(g, body);
+            if (forceVectors) {
+                drawForceVector(g, body);
+            }
 
-            // Swing uses Graphics2D internally, so this downcast is safe
-            drawHistoryTrail((Graphics2D) g, body, true);
+            if (historyTrails) {
+                // Swing uses Graphics2D internally, so this downcast is safe
+                drawHistoryTrail((Graphics2D) g, body, colorTrails);
+            }
         }
-        
+
         // Smooth measurement by averaging with previous
         frameTime = (frameTime + (System.nanoTime() - startTime)) / 2;
     }
@@ -281,7 +287,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
      * Draws the historical positions of the body as a series of connected lines on the given
      * graphics context.
      *
-     * @param g the graphics context used to draw the position history
+     * @param g    the graphics context used to draw the position history
      * @param body the body whose position history is to be drawn
      */
     private void drawHistoryTrail(Graphics2D g, Body body, boolean color) {
@@ -313,9 +319,9 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
      * Draw a circle using the given graphics context. Much more pleasant to use then the default
      * drawOval() method.
      *
-     * @param g the graphics context to use
-     * @param x the x-coordinate of the center of the circle to draw
-     * @param y the y-coordinate of the center of the circle to draw
+     * @param g      the graphics context to use
+     * @param x      the x-coordinate of the center of the circle to draw
+     * @param y      the y-coordinate of the center of the circle to draw
      * @param radius the radius, in pixels, or the circle to draw
      */
     public void drawCircle(Graphics g, int x, int y, int radius) {
@@ -360,7 +366,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
 
         } else if (e.getButton() == MouseEvent.BUTTON2) {
 
-        } else if (e.getButton() == MouseEvent.BUTTON3){
+        } else if (e.getButton() == MouseEvent.BUTTON3) {
 
         }
     }
@@ -379,11 +385,11 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
             Cursor cursor = new Cursor(Cursor.DEFAULT_CURSOR);
             frame.setCursor(cursor);
 
-        // middle mouse button
+            // middle mouse button
         } else if (e.getButton() == MouseEvent.BUTTON2) {
             setScaleToFit();
 
-        // right mouse button
+            // right mouse button
         } else if (e.getButton() == MouseEvent.BUTTON3) {
 
         }
@@ -414,7 +420,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
     private Point mouseLocationOnScreen() {
         Point screen = MouseInfo.getPointerInfo().getLocation();
         Point window = frame.getLocationOnScreen();
-        return new Point(screen.x - window.x,screen.y - window.y);
+        return new Point(screen.x - window.x, screen.y - window.y);
     }
 
     /**
@@ -434,7 +440,8 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
      * @param e the event to be processed
      */
     @Override
-    public void mouseEntered(MouseEvent e) {}
+    public void mouseEntered(MouseEvent e) {
+    }
 
     /**
      * Invoked when the mouse exits a component.
@@ -442,7 +449,8 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
      * @param e the event to be processed
      */
     @Override
-    public void mouseExited(MouseEvent e) {}
+    public void mouseExited(MouseEvent e) {
+    }
 
     /**
      * Invoked when a mouse button is pressed on a component and then dragged. {@code MOUSE_DRAGGED}
@@ -454,7 +462,8 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
      * @param e the event to be processed
      */
     @Override
-    public void mouseDragged(MouseEvent e) {}
+    public void mouseDragged(MouseEvent e) {
+    }
 
     /**
      * Invoked when the mouse cursor has been moved onto a component but no buttons have been pushed.
@@ -462,7 +471,8 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
      * @param e the event to be processed
      */
     @Override
-    public void mouseMoved(MouseEvent e) {}
+    public void mouseMoved(MouseEvent e) {
+    }
 
     /**
      * Invoked when a key has been typed. See the class description for {@link KeyEvent} for a
@@ -471,7 +481,8 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
      * @param e the event to be processed
      */
     @Override
-    public void keyTyped(KeyEvent e) {}
+    public void keyTyped(KeyEvent e) {
+    }
 
 
     /**
@@ -515,6 +526,15 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
         } else if (e.getKeyCode() == KeyEvent.VK_R) {
             sim.resetBodies();
 
+        } else if (e.getKeyCode() == KeyEvent.VK_F) {
+            forceVectors = !forceVectors;
+
+        } else if (e.getKeyCode() == KeyEvent.VK_C) {
+            colorTrails = !colorTrails;
+
+        } else if (e.getKeyCode() == KeyEvent.VK_T) {
+            historyTrails = !historyTrails;
+
         } else if (e.getKeyCode() == KeyEvent.VK_F11) {
             toggleFullScreen();
         }
@@ -527,7 +547,8 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
      * @param e the event to be processed
      */
     @Override
-    public void keyReleased(KeyEvent e) { }
+    public void keyReleased(KeyEvent e) {
+    }
 
     /**
      * Invoked when the mouse wheel is rotated.
@@ -543,7 +564,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
 
         // modify the scale (zoom in or our with the mouse wheel)
         double rotation = e.getPreciseWheelRotation();
-        double newScale = scale + scale/10 * rotation;
+        double newScale = scale + scale / 10 * rotation;
         if (newScale > 0) scale = newScale;
 
         // update pan so that area being pointed to stays the same
