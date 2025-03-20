@@ -81,7 +81,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
                     update();
                 }
             }
-        }, 0, 1000 / 60);
+        }, 0, config.getRepaintInterval());
     }
 
     /**
@@ -495,7 +495,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
             if (sim.isRunning()) {
                 sim.stopAutoStep();
             } else {
-                sim.autoStep(1000 / 60);
+                sim.autoStep(config.getAutoStepInterval());
             }
 
         } else if (e.getKeyCode() == KeyEvent.VK_DELETE) {

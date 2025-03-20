@@ -12,7 +12,6 @@ import java.nio.file.Paths;
 
 @Slf4j
 public class NBody2dLauncher {
-    public static final String CONFIG_FILE = "config.yml";
 
     /**
      * Main method which creates and configures a {@link Simulation} simulation.
@@ -20,8 +19,8 @@ public class NBody2dLauncher {
      * @param args if an integer is passed as an argument then it will determine the 'n' parameter.
      */
     public static void main(String[] args) {
-        log.info("Reading configuration from {}", CONFIG_FILE);
-        Config config = readConfiguration(CONFIG_FILE);
+        log.info("Reading configuration from {}", args[0]);
+        Config config = readConfiguration(args[0]);
 
         // create and configure the simulation
         Simulation sim = new Simulation(config.getSimulation());
@@ -33,8 +32,7 @@ public class NBody2dLauncher {
     }
 
     /**
-     * Reads config.yml from resources and deserializes as {@link Config}.
-     * @param name
+     * Reads YAML config file from resources and deserializes as {@link Config}.
      */
     private static Config readConfiguration(String name) {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
