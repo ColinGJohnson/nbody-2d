@@ -5,22 +5,26 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import dev.cgj.nbody2d.config.Config;
 import dev.cgj.nbody2d.simulation.Simulation;
 import lombok.extern.slf4j.Slf4j;
+import picocli.CommandLine;
 
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-@Slf4j
-public class NBody2dLauncher {
+import static picocli.CommandLine.Command;
+import static picocli.CommandLine.Option;
 
-    /**
-     * Main method which creates and configures a {@link Simulation} simulation.
-     *
-     * @param args if an integer is passed as an argument then it will determine the 'n' parameter.
-     */
-    public static void main(String[] args) {
-        log.info("Reading configuration from {}", args[0]);
-        Config config = readConfiguration(args[0]);
+@Slf4j
+@Command(name = "NBody2D", mixinStandardHelpOptions = true)
+public class NBody2dLauncher implements Runnable {
+
+    @Option(names = { "-c", "--output" }, description = "Config file")
+    String configurationPath = "config.yml";
+
+    @Override
+    public void run() {
+        log.info("Reading configuration from {}", configurationPath);
+        Config config = readConfiguration(configurationPath);
 
         // create and configure the simulation
         Simulation sim = new Simulation(config.getSimulation());
@@ -29,6 +33,16 @@ public class NBody2dLauncher {
         // create a window to view the simulation state
         NBody2dViewer viewer = new NBody2dViewer(config.getViewer(), sim);
         viewer.run();
+    }
+
+    /**
+     * Main method which creates and configures a {@link Simulation} simulation.
+     *
+     * @param args if an integer is passed as an argument then it will determine the 'n' parameter.
+     */
+    public static void main(String[] args) {
+        int exitCode = new CommandLine(new NBody2dLauncher()).execute(args);
+        System.exit(exitCode);
     }
 
     /**
