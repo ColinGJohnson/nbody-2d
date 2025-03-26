@@ -38,7 +38,6 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
     private JFrame frame;               // the frame that the simulation is displayed in
     private boolean fullScreen = false; // is the viewer full screen currently?
     private double scale;               // simulation meters per on-screen pixel
-    private boolean ready = false;      // is the viewer ready to display graphics?
 
     private boolean historyTrails;      // should trails be drawn?
     private boolean colorTrails;        // should trails be colored?
@@ -80,9 +79,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
         new java.util.Timer().scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                if (ready) {
-                    update();
-                }
+                update();
             }
         }, 0, config.getRepaintInterval());
     }
@@ -106,14 +103,12 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
 
         frame.add(this);
         frame.setVisible(true);
-        ready = true;
     }
 
     /**
      * Enables or disables full-screen mode. Questionable behavior on systems with multiple monitors.
      */
     public void toggleFullScreen() {
-        ready = false;
         frame.setVisible(false);
         frame.remove(this);
         frame.dispose();
@@ -333,7 +328,9 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
      * user interaction data.
      */
     public void update() {
-        repaint();
+        if (frame != null) {
+            repaint();
+        }
         if (isPanning) {
             updatePan();
         }
@@ -524,6 +521,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
             pan.x -= 20;
 
         } else if (e.getKeyCode() == KeyEvent.VK_R) {
+            sim.stopAutoStep();
             sim.resetBodies();
 
         } else if (e.getKeyCode() == KeyEvent.VK_F) {

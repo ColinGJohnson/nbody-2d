@@ -21,6 +21,9 @@ public class NBody2dLauncher implements Runnable {
     @Option(names = { "-c", "--output" }, description = "Config file")
     String configurationPath = "config.yml";
 
+    @Option(names = { "h", "--headless" }, description = "Whether ")
+    boolean headless = false;
+
     @Override
     public void run() {
         log.info("Reading configuration from {}", configurationPath);
@@ -31,8 +34,20 @@ public class NBody2dLauncher implements Runnable {
         log.info("Created simulation with n={} bodies", sim.getBodies().length);
 
         // create a window to view the simulation state
+        if (headless) {
+            runHeadless(config, sim);
+        } else {
+            runGui(config, sim);
+        }
+    }
+
+    private void runGui(Config config, Simulation sim) {
         NBody2dViewer viewer = new NBody2dViewer(config.getViewer(), sim);
         viewer.run();
+    }
+
+    private void runHeadless(Config config, Simulation sim) {
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 
     /**
@@ -41,8 +56,7 @@ public class NBody2dLauncher implements Runnable {
      * @param args if an integer is passed as an argument then it will determine the 'n' parameter.
      */
     public static void main(String[] args) {
-        int exitCode = new CommandLine(new NBody2dLauncher()).execute(args);
-        System.exit(exitCode);
+        new CommandLine(new NBody2dLauncher()).execute(args);
     }
 
     /**

@@ -148,6 +148,7 @@ public class Simulation {
      * @param stepDelay the amount of time to wait between simulation steps.
      */
     public void autoStep(long stepDelay) {
+        stopAutoStep();
         timer = new java.util.Timer();
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
@@ -162,7 +163,9 @@ public class Simulation {
      * Stops the autoStep timer. If autoStep is not running, this method does nothing.
      */
     public void stopAutoStep() {
-        timer.cancel();
+        if (timer != null) {
+            timer.cancel();
+        }
         running = false;
     }
 }
