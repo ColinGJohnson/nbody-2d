@@ -132,6 +132,7 @@ public class Simulation {
             body.updateVelocity(config.getDt());
             body.updateColor(getMaxForce());
             body.updatePosition(config.getDt());
+            body.applyBoundary(config.getBoundary());
         }
 
         // record the time elapsed
