@@ -160,16 +160,18 @@ public class Body {
     }
 
     /**
-     * If the body is more than {@code boundary} meters from the origin, place it on the boundary 
+     * If the body is more than {@code boundary} meters from the origin, place it on the boundary
+     * and stop it.
      * 
      * @param boundary Maximum distance from the origin for this body's position.
      */
     public void applyBoundary(double boundary) {
-        if (distFromOrigin(this) > boundary) {
-            double normX = state.getX() / distFromOrigin(this);
-            double normY = state.getY() / distFromOrigin(this);
-            state.setX(normX * boundary);
-            state.setY(normY * boundary);
+        double fromOrigin = distFromOrigin(this);
+        if (fromOrigin > boundary) {
+            state.setX(state.getX() / fromOrigin * boundary);
+            state.setY(state.getY() / fromOrigin * boundary);
+            state.setVx(0);
+            state.setVy(0);
         }
     }
 }
