@@ -1,9 +1,12 @@
 package dev.cgj.nbody2d.simulation;
 
+import dev.cgj.nbody2d.config.BoundaryType;
 import dev.cgj.nbody2d.util.BoundedQueue;
 import lombok.Getter;
 
 import java.awt.Color;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * An object used to represent a body. Each body keeps track of its position, velocity, and the
@@ -26,6 +29,9 @@ public class Body {
 
     @Getter
     private BoundedQueue<BodyState> history = new BoundedQueue<>(100);
+
+    @Getter
+    private boolean active = true;
 
     /**
      * Body Constructor; bodies initially have 0 velocity relative to the origin and have their
@@ -63,25 +69,25 @@ public class Body {
      * Updates the forces currently acting on this body using Newtonian Gravity. Does not affect
      * position or velocity.
      *
-     * @param environment an ArrayList of other bodies whose gravity should be considered.
+     * @param bodies an ArrayList of other bodies whose gravity should be considered.
      */
-    public void updateForces(Body[] environment) {
+    public void updateForces(List<Body> bodies) {
 
         // reset forces before recalculating
         state.setFx(0);
         state.setFy(0);
 
-        for (Body b : environment) {
+        for (Body b : bodies) {
 
             // don't calculate the force due to gravity between two bodies which are the same.
-            if (b == this)  continue;
+            if (b == this) continue;
 
             // The two bodies cannot be so close that they would overlap.
-            double minDistance = this.state.getR() + b.state.getR();
-            double dist = Math.max(minDistance, distBetween(this.state.getX(), this.state.getY(), b.state.getX(), b.state.getY()));
-            double F = (G * this.state.getMass() * b.state.getMass()) / (dist * dist + EPS * EPS);
-            state.setFx(state.getFx() + F * ((b.state.getX() - this.state.getX()) / dist));
-            state.setFy(state.getFy() + F * ((b.state.getY() - this.state.getY()) / dist));
+            double minDistance = state.getR() + b.state.getR();
+            double dist = Math.max(minDistance, distBetween(state.getX(), state.getY(), b.state.getX(), b.state.getY()));
+            double F = (G * state.getMass() * b.state.getMass()) / (dist * dist + EPS * EPS);
+            state.setFx(state.getFx() + F * ((b.state.getX() - state.getX()) / dist));
+            state.setFy(state.getFy() + F * ((b.state.getY() - state.getY()) / dist));
         }
     }
 
@@ -100,17 +106,6 @@ public class Body {
 
         // Faster than Math.hypot(dx, dy), but with worse handling of overflow or underflow.
         return Math.sqrt(dx * dx + dy * dy);
-    }
-
-    /**
-     * Calculates the distance between two bodies.
-     *
-     * @param a the first body
-     * @param b the second body
-     * @return the distance (in meters) between bodies a and b
-     */
-    public static double distBetween(Body a, Body b) {
-        return distBetween(a.state.getX(), a.state.getY(), b.state.getX(), b.state.getY());
     }
 
     /**
@@ -165,13 +160,27 @@ public class Body {
      * 
      * @param boundary Maximum distance from the origin for this body's position.
      */
-    public void applyBoundary(double boundary) {
+    public void applyBoundary(BoundaryType type, double boundary) {
+        if (Objects.requireNonNull(type) == BoundaryType.NONE) {
+            return;
+        }
+
         double fromOrigin = distFromOrigin(this);
+
         if (fromOrigin > boundary) {
+            if (type == BoundaryType.STICK) {
+                this.active = false;
+            } else if (type == BoundaryType.WRAP) {
+                boundary = -boundary;
+            }
+
             state.setX(state.getX() / fromOrigin * boundary);
             state.setY(state.getY() / fromOrigin * boundary);
-            state.setVx(0);
-            state.setVy(0);
+
+            if (type == BoundaryType.STOP) {
+                state.setVx(0);
+                state.setVy(0);
+            }
         }
     }
 }

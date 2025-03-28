@@ -220,7 +220,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
 
         // draw debug info
         g.setColor(Color.WHITE);
-        g.drawString("tracked particles: " + sim.getBodies().length, 20, 40);
+        g.drawString("tracked particles: " + sim.getBodies().size(), 20, 40);
         g.drawString(String.format("scale: %.2e meters / pixel", scale), 20, 55);
         g.drawString("sim elapsed time: " + secondsToString(sim.getTimeElapsed()), 20, 70);
         g.drawString("sim step time: " + Duration.ofNanos(sim.getStepTime()).toMillis() + "ms", 20, 85);

@@ -31,7 +31,7 @@ public class NBody2dLauncher implements Runnable {
 
         // create and configure the simulation
         Simulation sim = new Simulation(config.getSimulation());
-        log.info("Created simulation with n={} bodies", sim.getBodies().length);
+        log.info("Created simulation with n={} bodies", sim.getBodies().size());
 
         // create a window to view the simulation state
         if (headless) {

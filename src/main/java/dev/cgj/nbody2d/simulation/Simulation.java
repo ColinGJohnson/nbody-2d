@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.TimerTask;
 
 /**
@@ -14,13 +16,6 @@ import java.util.TimerTask;
 @Slf4j
 public class Simulation {
 
-    public static final double MOON_MASS = 7.347e10;   // moon mass (kilograms)
-    public static final double EARTH_MASS = 5.972e24;  // mass of the earth (kilograms)
-    public static final double EARTH_RADIUS = 6.356e6; // radius of the earth (meters)
-    public static final double SUN_MASS = 1.989e30;    // mass of the sun (kilograms)
-    public static final double SUN_RADIUS = 6.955e8;   // radius of the sun
-    public static final double MARS_DIST = 2.3816e11;  // distance to Mars (meters)
-
     @Getter
     private final SimulationConfig config;
 
@@ -28,12 +23,12 @@ public class Simulation {
     private long stepTime;
 
     /**
-     * An array of {@link Body} objects representing the bodies participating in the simulation.
+     * An list of {@link Body} objects representing the bodies participating in the simulation.
      * Each body tracks its position, velocity, and the forces acting upon it. These objects
      * are used to model the gravitational interactions between the bodies in the N-body simulation.
      */
     @Getter
-    private Body[] bodies;
+    private List<Body> bodies;
 
     /**
      * The amount of simulated time that has passed so far (seconds).
@@ -67,16 +62,15 @@ public class Simulation {
         int n = config.getInitialState().stream()
                 .mapToInt(InitialBodyConfig::getN)
                 .sum();
-        bodies = new Body[n];
+        bodies = new ArrayList<>(n);
 
-        int i = 0;
         for (InitialBodyConfig init : config.getInitialState()) {
             for (int j = 0; j < init.getN(); j++) {
-                bodies[i] = new Body(init.getX(), init.getY(), init.getMass(), init.getR());
-                bodies[i].state.setVx(init.getVx());
-                bodies[i].state.setVy(init.getVy());
-                randomizePosition(bodies[i], init.getPositionJitter());
-                i++;
+                Body body = new Body(init.getX(), init.getY(), init.getMass(), init.getR());
+                body.state.setVx(init.getVx());
+                body.state.setVy(init.getVy());
+                randomizePosition(body, init.getPositionJitter());
+                bodies.add(body);
             }
         }
     }
@@ -121,18 +115,19 @@ public class Simulation {
      */
     public void step() {
         long startTime = System.nanoTime();
+        List<Body> active = bodies.stream().filter(Body::isActive).toList();
 
         // update the forces acting on each body
-        for (Body body : bodies) {
-            body.updateForces(bodies);
+        for (Body body : active) {
+            body.updateForces(active);
         }
 
         // update the positions and colors of each body
-        for (Body body : bodies) {
+        for (Body body : active) {
             body.updateVelocity(config.getDt());
             body.updateColor(getMaxForce());
             body.updatePosition(config.getDt());
-            body.applyBoundary(config.getBoundary());
+            body.applyBoundary(config.getBoundaryType(), config.getBoundary());
         }
 
         // record the time elapsed

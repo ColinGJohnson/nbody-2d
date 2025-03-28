@@ -11,6 +11,8 @@ import java.util.List;
 @Jacksonized
 public class SimulationConfig {
 
+    BoundaryType boundaryType = BoundaryType.STOP;
+
     /**
      * The edge of this simulation's universe.
      */
