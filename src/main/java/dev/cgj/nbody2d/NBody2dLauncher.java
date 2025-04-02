@@ -3,13 +3,18 @@ package dev.cgj.nbody2d;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import dev.cgj.nbody2d.config.Config;
+import dev.cgj.nbody2d.simulation.Body;
+import dev.cgj.nbody2d.simulation.BodyState;
 import dev.cgj.nbody2d.simulation.Simulation;
 import lombok.extern.slf4j.Slf4j;
 import picocli.CommandLine;
 
+import java.io.File;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 import static picocli.CommandLine.Command;
 import static picocli.CommandLine.Option;
@@ -18,11 +23,21 @@ import static picocli.CommandLine.Option;
 @Command(name = "NBody2D", mixinStandardHelpOptions = true)
 public class NBody2dLauncher implements Runnable {
 
-    @Option(names = { "-c", "--output" }, description = "Config file")
+    @Option(names = {"-c", "--config"},
+            description = "Path to the YAML configuration file. Defaults to 'uniform.yml'.")
     String configurationPath = "uniform.yml";
 
-    @Option(names = { "h", "--headless" }, description = "Whether ")
+    @Option(names = {"-o", "--output"},
+            description = "Path where the simulation results will be written. Defaults to 'output.yml'.")
+    String outputPath = "output.yml";
+
+    @Option(names = {"--headless"},
+            description = "Whether to run the simulation in headless mode (no GUI)")
     boolean headless = false;
+
+    @Option(names = {"-s", "--steps"},
+            description = "Number of simulation steps to run in headless mode. Ignored if not in headless mode.")
+    int steps = 1000;
 
     @Override
     public void run() {
@@ -35,7 +50,7 @@ public class NBody2dLauncher implements Runnable {
 
         // create a window to view the simulation state
         if (headless) {
-            runHeadless(config, sim);
+            runHeadless(sim);
         } else {
             runGui(config, sim);
         }
@@ -46,8 +61,23 @@ public class NBody2dLauncher implements Runnable {
         viewer.run();
     }
 
-    private void runHeadless(Config config, Simulation sim) {
-        throw new UnsupportedOperationException("Not yet implemented");
+    private void runHeadless(Simulation sim) {
+        log.info("Running simulation headless for {} steps", steps);
+
+        List<List<BodyState>> history = new ArrayList<>();
+        for (int i = 0; i < steps; i++) {
+            sim.step();
+            history.add(sim.getBodies().stream().map(Body::getState).toList());
+        }
+
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            File file = new File(outputPath);
+            mapper.writeValue(file, history);
+            log.info("Simulation results written to {}", outputPath);
+        } catch (Exception e) {
+            log.error("Failed to write simulation results to file", e);
+        }
     }
 
     /**

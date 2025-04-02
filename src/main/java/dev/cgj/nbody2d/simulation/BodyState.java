@@ -1,5 +1,6 @@
 package dev.cgj.nbody2d.simulation;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 import java.awt.Color;
@@ -17,6 +18,8 @@ public class BodyState {
 
     private double r;     // physical radius of this body (in meters)
     private double mass;  // the mass of this body (in kilograms)
+
+    @JsonIgnore
     private Color color;  // the color of this body (not used in calculations)
 
     public BodyState() { }

@@ -12,6 +12,7 @@ import java.util.Objects;
  * An object used to represent a body. Each body keeps track of its position, velocity, and the
  * forces acting on it.
  */
+@Getter
 public class Body {
 
     /**
@@ -27,10 +28,8 @@ public class Body {
 
     public final BodyState state = new BodyState();
 
-    @Getter
-    private BoundedQueue<BodyState> history = new BoundedQueue<>(20);
+    private final BoundedQueue<BodyState> history = new BoundedQueue<>(20);
 
-    @Getter
     private boolean active = true;
 
     /**
