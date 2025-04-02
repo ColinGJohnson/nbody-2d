@@ -28,7 +28,7 @@ public class Body {
     public final BodyState state = new BodyState();
 
     @Getter
-    private BoundedQueue<BodyState> history = new BoundedQueue<>(100);
+    private BoundedQueue<BodyState> history = new BoundedQueue<>(20);
 
     @Getter
     private boolean active = true;

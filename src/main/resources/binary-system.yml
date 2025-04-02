@@ -1,6 +1,6 @@
 viewer:
   repaintInterval: 10
-  autoStepInterval: 1
+  autoStepInterval: 10
 
 simulation:
   boundary: 1e11

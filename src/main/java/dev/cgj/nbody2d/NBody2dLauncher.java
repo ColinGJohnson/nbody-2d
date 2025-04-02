@@ -19,7 +19,7 @@ import static picocli.CommandLine.Option;
 public class NBody2dLauncher implements Runnable {
 
     @Option(names = { "-c", "--output" }, description = "Config file")
-    String configurationPath = "config.yml";
+    String configurationPath = "uniform.yml";
 
     @Option(names = { "h", "--headless" }, description = "Whether ")
     boolean headless = false;

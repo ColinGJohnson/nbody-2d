@@ -1,0 +1,15 @@
+viewer:
+  repaintInterval: 20
+  autoStepInterval: 20
+
+simulation:
+  boundary: 1e10
+  dt: 3600
+
+  initialState:
+    - n: 2000
+      positionJitter: 1e10
+      velocityJitter: 0
+      r: 1e7
+      radiusJitter: 0
+      mass: 1e25
