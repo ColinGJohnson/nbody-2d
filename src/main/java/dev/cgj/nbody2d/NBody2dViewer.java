@@ -234,7 +234,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
             Point location = simToPixels(body.state.getX(), body.state.getY());
 
             g.setColor(body.state.getColor());
-            int radius = distanceToPixels(body.state.getR());
+            int radius = distanceToPixels(body.state.getRadius());
             if (radius < 1) radius = 1;
             drawCircle(g, location.x, location.y, radius);
 

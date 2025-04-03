@@ -26,7 +26,7 @@ public class Body {
      */
     public static final double G = 6.673e-11;
 
-    public final BodyState state = new BodyState();
+    public BodyState state;
 
     private final BoundedQueue<BodyState> history = new BoundedQueue<>(20);
 
@@ -41,12 +41,16 @@ public class Body {
      * @param mass the mass of this body
      * @param r the radius of this body
      */
-    public Body(double x, double y, double mass, double r) {
-        this.state.setX(x);
-        this.state.setY(y);
-        this.state.setMass(mass);
-        this.state.setR(r);
-        this.state.setColor(Color.WHITE);
+    public Body(double x, double y, double mass, double r, double vx, double vy) {
+        this.state = BodyState.builder()
+            .x(x)
+            .y(y)
+            .vx(vx)
+            .vy(vy)
+            .mass(mass)
+            .radius(r)
+            .color(Color.WHITE)
+            .build();
     }
 
     /**
@@ -61,7 +65,7 @@ public class Body {
         float h = 0.5f * (float)Math.pow((v/limit), 0.3);
         float s = 0.7f;
         float b = 1f;
-        state.setColor(Color.getHSBColor(h, s, b));
+        state = state.withColor((Color.getHSBColor(h, s, b)));
     }
 
     /**
@@ -73,8 +77,8 @@ public class Body {
     public void updateForces(List<Body> bodies) {
 
         // reset forces before recalculating
-        state.setFx(0);
-        state.setFy(0);
+        state = state.withFx(0);
+        state = state.withFy(0);
 
         for (Body b : bodies) {
 
@@ -82,11 +86,11 @@ public class Body {
             if (b == this) continue;
 
             // The two bodies cannot be so close that they would overlap.
-            double minDistance = state.getR() + b.state.getR();
+            double minDistance = state.getRadius() + b.state.getRadius();
             double dist = Math.max(minDistance, distBetween(state.getX(), state.getY(), b.state.getX(), b.state.getY()));
             double F = (G * state.getMass() * b.state.getMass()) / (dist * dist + EPS * EPS);
-            state.setFx(state.getFx() + F * ((b.state.getX() - state.getX()) / dist));
-            state.setFy(state.getFy() + F * ((b.state.getY() - state.getY()) / dist));
+            state = state.withFx(state.getFx() + F * ((b.state.getX() - state.getX()) / dist));
+            state = state.withFy(state.getFy() + F * ((b.state.getY() - state.getY()) / dist));
         }
     }
 
@@ -137,8 +141,8 @@ public class Body {
      *           forces on this body should be applied
      */
     public void updateVelocity(double dt) {
-        state.setVx(state.getVx() + dt * state.getFx() / state.getMass());
-        state.setVy(state.getVy() + dt * state.getFy() / state.getMass());
+        state = state.withVx(state.getVx() + dt * state.getFx() / state.getMass());
+        state = state.withVy(state.getVy() + dt * state.getFy() / state.getMass());
     }
 
     /**
@@ -148,9 +152,9 @@ public class Body {
      * @param dt delta time
      */
     public void updatePosition(double dt) {
-        state.setX(state.getX() + dt * state.getVx());
-        state.setY(state.getY() + dt * state.getVy());
-        history.add(new BodyState(state));
+        state = state.withX(state.getX() + dt * state.getVx());
+        state = state.withY(state.getY() + dt * state.getVy());
+        history.add(state);
     }
 
     /**
@@ -173,12 +177,12 @@ public class Body {
                 boundary = -boundary;
             }
 
-            state.setX(state.getX() / fromOrigin * boundary);
-            state.setY(state.getY() / fromOrigin * boundary);
+            state = state.withX(state.getX() / fromOrigin * boundary);
+            state = state.withY(state.getY() / fromOrigin * boundary);
 
             if (type == BoundaryType.STOP) {
-                state.setVx(0);
-                state.setVy(0);
+                state = state.withVx(0);
+                state = state.withVy(0);
             }
         }
     }

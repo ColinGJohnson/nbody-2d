@@ -66,9 +66,7 @@ public class Simulation {
 
         for (InitialBodyConfig init : config.getInitialState()) {
             for (int j = 0; j < init.getN(); j++) {
-                Body body = new Body(init.getX(), init.getY(), init.getMass(), init.getR());
-                body.state.setVx(init.getVx());
-                body.state.setVy(init.getVy());
+                Body body = new Body(init.getX(), init.getY(), init.getMass(), init.getR(), init.getVx(), init.getVy());
                 randomizePosition(body, init.getPositionJitter());
                 bodies.add(body);
             }
@@ -92,8 +90,8 @@ public class Simulation {
         double distance = Math.pow(Math.random(), 0.5) * limit;
 
         // calculate (x,y) coordinate of this point and assign to current body
-        body.state.setX(Math.cos(angle) * distance);
-        body.state.setY(Math.sin(angle) * distance);
+        body.state = body.state.withX(Math.cos(angle) * distance);
+        body.state = body.state.withY(Math.sin(angle) * distance);
     }
 
     /**
