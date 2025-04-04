@@ -13,35 +13,21 @@ import java.awt.Color;
 @With
 @Jacksonized
 public class BodyState {
-    /**
-     * x-distance from the origin (in meters).
-     */
-    double x;
 
     /**
-     * y-distance from the origin (in meters).
+     * Distance from the origin in meters.
      */
-    double y;
+    Vec2 position;
 
     /**
-     * x-velocity (in meters per second).
+     * Velocity in meters per second.
      */
-    double vx;
+    Vec2 velocity;
 
     /**
-     * y-velocity (in meters per second).
+     * Force in Newtons.
      */
-    double vy;
-
-    /**
-     * x-force (in Newtons).
-     */
-    double fx;
-
-    /**
-     * y-force (in Newtons).
-     */
-    double fy;
+    Vec2 force;
 
     /**
      * Physical radius of this body (in meters).

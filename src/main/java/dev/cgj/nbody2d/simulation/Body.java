@@ -43,10 +43,8 @@ public class Body {
      */
     public Body(double x, double y, double mass, double r, double vx, double vy) {
         this.state = BodyState.builder()
-            .x(x)
-            .y(y)
-            .vx(vx)
-            .vy(vy)
+            .position(new Vec2(x, y))
+            .velocity(new Vec2(vx, vy))
             .mass(mass)
             .radius(r)
             .color(Color.WHITE)
@@ -61,8 +59,7 @@ public class Body {
      * @param limit a reference value
      */
     public void updateColor(double limit) {
-        double v = Math.sqrt(state.getFx() * state.getFx() + state.getFy() * state.getFy());
-        float h = 0.5f * (float)Math.pow((v/limit), 0.3);
+        float h = 0.5f * (float)Math.pow((state.getForce().magnitude() / limit), 0.3);
         float s = 0.7f;
         float b = 1f;
         state = state.withColor((Color.getHSBColor(h, s, b)));
@@ -75,62 +72,25 @@ public class Body {
      * @param bodies an ArrayList of other bodies whose gravity should be considered.
      */
     public void updateForces(List<Body> bodies) {
+        Vec2 netForce = Vec2.ZERO;
 
-        // reset forces before recalculating
-        state = state.withFx(0);
-        state = state.withFy(0);
-
-        for (Body b : bodies) {
+        for (Body other : bodies) {
 
             // don't calculate the force due to gravity between two bodies which are the same.
-            if (b == this) continue;
+            if (other == this) continue;
 
             // The two bodies cannot be so close that they would overlap.
-            double minDistance = state.getRadius() + b.state.getRadius();
-            double dist = Math.max(minDistance, distBetween(state.getX(), state.getY(), b.state.getX(), b.state.getY()));
-            double F = (G * state.getMass() * b.state.getMass()) / (dist * dist + EPS * EPS);
-            state = state.withFx(state.getFx() + F * ((b.state.getX() - state.getX()) / dist));
-            state = state.withFy(state.getFy() + F * ((b.state.getY() - state.getY()) / dist));
+            double dist = Math.max(
+                state.getRadius() + other.state.getRadius(),
+                state.getPosition().distanceFrom(other.getState().getPosition())
+            );
+
+            Vec2 F = other.state.getPosition().minus(state.getPosition()).dividedBy(dist)
+                    .times((G * state.getMass() * other.state.getMass()) / (dist * dist + EPS * EPS));
+            netForce = netForce.plus(F);
         }
-    }
 
-    /**
-     * Calculates the distance between two points.
-     *
-     * @param x1 the x-coordinate of the first point
-     * @param y1 the y-coordinate of the first point
-     * @param x2 the x-coordinate of the second point
-     * @param y2 the y-coordinate of the second point
-     * @return the distance (in meters) between the two points
-     */
-    public static double distBetween(double x1, double y1, double x2, double y2) {
-        double dx = x2 - x1;
-        double dy = y2 - y1;
-
-        // Faster than Math.hypot(dx, dy), but with worse handling of overflow or underflow.
-        return Math.sqrt(dx * dx + dy * dy);
-    }
-
-    /**
-     * Calculates the distance from a body to a given point.
-     *
-     * @param body the body
-     * @param x the x position of the point
-     * @param y the y position of the point
-     * @return the distance (in meters) from the body to the point
-     */
-    public static double distFrom(Body body, double x, double y) {
-        return distBetween(body.state.getX(), body.state.getY(), x, y);
-    }
-
-    /**
-     * Calculates the distance from a body to the origin (0,0).
-     *
-     * @param body The body to calculate distance to.
-     * @return the distance (in meters) from the body to the origin.
-     */
-    public static double distFromOrigin(Body body) {
-        return distFrom(body, 0, 0);
+        state = state.withForce(netForce);
     }
 
     /**
@@ -141,8 +101,8 @@ public class Body {
      *           forces on this body should be applied
      */
     public void updateVelocity(double dt) {
-        state = state.withVx(state.getVx() + dt * state.getFx() / state.getMass());
-        state = state.withVy(state.getVy() + dt * state.getFy() / state.getMass());
+        Vec2 delta = state.getForce().times(dt).dividedBy(state.getMass());
+        state = state.withVelocity(state.getVelocity().plus(delta));
     }
 
     /**
@@ -152,8 +112,8 @@ public class Body {
      * @param dt delta time
      */
     public void updatePosition(double dt) {
-        state = state.withX(state.getX() + dt * state.getVx());
-        state = state.withY(state.getY() + dt * state.getVy());
+        Vec2 delta = state.getVelocity().times(dt);
+        state = state.withPosition(state.getPosition().plus(delta));
         history.add(state);
     }
 
@@ -168,7 +128,7 @@ public class Body {
             return;
         }
 
-        double fromOrigin = distFromOrigin(this);
+        double fromOrigin = this.state.getPosition().magnitude();
 
         if (fromOrigin > boundary) {
             if (type == BoundaryType.STICK) {
@@ -177,12 +137,10 @@ public class Body {
                 boundary = -boundary;
             }
 
-            state = state.withX(state.getX() / fromOrigin * boundary);
-            state = state.withY(state.getY() / fromOrigin * boundary);
+            state = state.withPosition(state.getPosition().dividedBy(fromOrigin).times(boundary));
 
             if (type == BoundaryType.STOP) {
-                state = state.withVx(0);
-                state = state.withVy(0);
+                state = state.withVelocity(Vec2.ZERO);
             }
         }
     }

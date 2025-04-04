@@ -90,8 +90,10 @@ public class Simulation {
         double distance = Math.pow(Math.random(), 0.5) * limit;
 
         // calculate (x,y) coordinate of this point and assign to current body
-        body.state = body.state.withX(Math.cos(angle) * distance);
-        body.state = body.state.withY(Math.sin(angle) * distance);
+        body.state = body.state.withPosition(new Vec2(
+                Math.cos(angle) * distance,
+                Math.sin(angle) * distance)
+        );
     }
 
     /**
@@ -102,7 +104,7 @@ public class Simulation {
     public double getMaxForce() {
         double maxForce = 0;
         for (Body body : bodies) {
-            double currentForce = Math.sqrt(body.state.getFx() * body.state.getFx() + body.state.getFy() * body.state.getFy());
+            double currentForce = body.state.getForce().magnitude();
             if (currentForce > maxForce) maxForce = currentForce;
         }
         return maxForce;
