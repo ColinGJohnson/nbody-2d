@@ -142,9 +142,10 @@ public class Simulation {
         }
 
         // update the positions and colors of each body
+        double maxForce = getMaxForce();
         for (SimulationBody body : active) {
             body.updateVelocity(config.getDt());
-            body.updateColor(getMaxForce());
+            body.updateColor(maxForce);
             body.updatePosition(config.getDt());
             body.applyBoundary(config.getBoundaryType(), config.getBoundary());
         }
