@@ -1,18 +1,15 @@
-package dev.cgj.nbody2d.simulation;
+package dev.cgj.nbody2d.data;
 
 import lombok.Builder;
-import lombok.Value;
 import lombok.With;
 import lombok.extern.jackson.Jacksonized;
 
-@Value
 @Builder
 @With
 @Jacksonized
-public class Vec2 {
-    public static final Vec2 ZERO = new Vec2(0, 0);
+public record Vec2(double x, double y) {
 
-    double x, y;
+    public static final Vec2 ZERO = new Vec2(0, 0);
 
     /**
      * Uses Math.sqrt which is faster than Math.hypot(dx, dy), but with worse handling of overflow

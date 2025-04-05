@@ -3,8 +3,8 @@ package dev.cgj.nbody2d;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import dev.cgj.nbody2d.config.Config;
-import dev.cgj.nbody2d.simulation.Body;
-import dev.cgj.nbody2d.simulation.BodyState;
+import dev.cgj.nbody2d.simulation.SimulationBody;
+import dev.cgj.nbody2d.data.Body;
 import dev.cgj.nbody2d.simulation.Simulation;
 import lombok.extern.slf4j.Slf4j;
 import picocli.CommandLine;
@@ -64,10 +64,10 @@ public class NBody2dLauncher implements Runnable {
     private void runHeadless(Simulation sim) {
         log.info("Running simulation headless for {} steps", steps);
 
-        List<List<BodyState>> history = new ArrayList<>();
+        List<List<Body>> history = new ArrayList<>();
         for (int i = 0; i < steps; i++) {
             sim.step();
-            history.add(sim.getBodies().stream().map(Body::getState).toList());
+            history.add(sim.getBodies().stream().map(SimulationBody::getState).toList());
         }
 
         ObjectMapper mapper = new ObjectMapper();

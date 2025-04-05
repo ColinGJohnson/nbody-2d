@@ -1,9 +1,9 @@
 package dev.cgj.nbody2d;
 
-import dev.cgj.nbody2d.simulation.Body;
+import dev.cgj.nbody2d.simulation.SimulationBody;
 import dev.cgj.nbody2d.simulation.Simulation;
 import dev.cgj.nbody2d.config.ViewerConfig;
-import dev.cgj.nbody2d.simulation.Vec2;
+import dev.cgj.nbody2d.data.Vec2;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -164,7 +164,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
     }
 
     private Point simToPixels(Vec2 position) {
-        return simToPixels(position.getX(), position.getY());
+        return simToPixels(position.x(), position.y());
     }
 
     /**
@@ -235,11 +235,11 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
         Point center = simToPixels(0, 0);
         drawCircle(g, center.x, center.y, distanceToPixels(sim.getConfig().getBoundary()));
 
-        for (Body body : sim.getBodies()) {
-            Point location = simToPixels(body.state.getPosition());
+        for (SimulationBody body : sim.getBodies()) {
+            Point location = simToPixels(body.getState().getPosition());
 
-            g.setColor(body.state.getColor());
-            int radius = distanceToPixels(body.state.getRadius());
+            g.setColor(body.getState().getColor());
+            int radius = distanceToPixels(body.getState().getRadius());
             if (radius < 1) radius = 1;
             drawCircle(g, location.x, location.y, radius);
 
@@ -263,18 +263,18 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
      * @param g    the graphics context used for drawing
      * @param body the body for which to draw the force vector
      */
-    private void drawForceVector(Graphics g, Body body) {
-        Point bodyLocation = simToPixels(body.state.getPosition());;
+    private void drawForceVector(Graphics g, SimulationBody body) {
+        Point bodyLocation = simToPixels(body.getState().getPosition());;
 
         // Normalize the force vector
-        double forceMagnitude = body.state.getForce().magnitude();
+        double forceMagnitude = body.getState().getForce().magnitude();
         if (forceMagnitude != 0) {
-            Vec2 normalized = body.state.getForce().divide(forceMagnitude);
+            Vec2 normalized = body.getState().getForce().divide(forceMagnitude);
 
             // Calculate the endpoint of the vector
             int vectorLength = 20;
-            int endX = bodyLocation.x + (int) (normalized.getX() * vectorLength);
-            int endY = bodyLocation.y + (int) (normalized.getY() * vectorLength);
+            int endX = bodyLocation.x + (int) (normalized.x() * vectorLength);
+            int endY = bodyLocation.y + (int) (normalized.y() * vectorLength);
 
             // Draw the vector
             g.setColor(Color.RED);
@@ -289,7 +289,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
      * @param g    the graphics context used to draw the position history
      * @param body the body whose position history is to be drawn
      */
-    private void drawHistoryTrail(Graphics2D g, Body body, boolean color) {
+    private void drawHistoryTrail(Graphics2D g, SimulationBody body, boolean color) {
         final int SEGMENT_LENGTH = 20;
         Path2D path = new Path2D.Double();
 

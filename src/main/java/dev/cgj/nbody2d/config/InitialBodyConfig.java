@@ -21,9 +21,8 @@ public class InitialBodyConfig {
     double y;
 
     /**
-     * Variation in initial position. When added to the simulation, the body will be placed at
-     * (x + (j * p_x), y + (j * p_y)) where j is positionJitter and p_x, p_y are independent random
-     * values in the range [-1, 1].
+     * Variation in initial position. When added to the simulation, the body will be offset between
+     * 0 and positionJitter meters in a random direction.
      */
     double positionJitter;
 

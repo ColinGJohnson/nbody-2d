@@ -1,8 +1,11 @@
 package dev.cgj.nbody2d.simulation;
 
 import dev.cgj.nbody2d.config.BoundaryType;
+import dev.cgj.nbody2d.data.Body;
+import dev.cgj.nbody2d.data.Vec2;
 import dev.cgj.nbody2d.util.BoundedQueue;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.awt.Color;
 import java.util.List;
@@ -13,42 +16,19 @@ import java.util.Objects;
  * forces acting on it.
  */
 @Getter
-public class Body {
+public class SimulationBody {
 
-    /**
-     * Softening parameter (epsilon) determining the minimum distance between this body and another
-     * when calculating forces to avoid infinite forces at very short distances.
-     */
-    public static final double EPS = 3E4;
-
-    /**
-     * Universal gravitational constant.
-     */
-    public static final double G = 6.673e-11;
-
-    public BodyState state;
-
-    private final BoundedQueue<BodyState> history = new BoundedQueue<>(20);
-
+    private final BoundedQueue<Body> history = new BoundedQueue<>(20);
     private boolean active = true;
 
+    @Setter
+    private Body state;
+
     /**
-     * Body Constructor; bodies initially have 0 velocity relative to the origin and have their
-     * color set to white.
-     *
-     * @param x the initial x-position of this body
-     * @param y the initial y-position of this body
-     * @param mass the mass of this body
-     * @param r the radius of this body
+     * @param body Initial state for this body.
      */
-    public Body(double x, double y, double mass, double r, double vx, double vy) {
-        this.state = BodyState.builder()
-            .position(new Vec2(x, y))
-            .velocity(new Vec2(vx, vy))
-            .mass(mass)
-            .radius(r)
-            .color(Color.WHITE)
-            .build();
+    public SimulationBody(Body body) {
+        this.state = body;
     }
 
     /**
@@ -71,10 +51,10 @@ public class Body {
      *
      * @param bodies an ArrayList of other bodies whose gravity should be considered.
      */
-    public void updateForces(List<Body> bodies) {
+    public void updateForces(List<SimulationBody> bodies) {
         Vec2 netForce = Vec2.ZERO;
 
-        for (Body other : bodies) {
+        for (SimulationBody other : bodies) {
 
             // don't calculate the force due to gravity between two bodies which are the same.
             if (other == this) continue;
@@ -86,7 +66,7 @@ public class Body {
             );
 
             Vec2 F = other.state.getPosition().add(state.getPosition()).divide(dist)
-                    .multiply((G * state.getMass() * other.state.getMass()) / (dist * dist + EPS * EPS));
+                    .multiply((Simulation.G * state.getMass() * other.state.getMass()) / (dist * dist + Simulation.EPS * Simulation.EPS));
             netForce = netForce.subtract(F);
         }
 
@@ -132,7 +112,7 @@ public class Body {
 
         if (fromOrigin > boundary) {
             if (type == BoundaryType.STICK) {
-                this.active = false;
+                active = false;
             } else if (type == BoundaryType.WRAP) {
                 boundary = -boundary;
             }

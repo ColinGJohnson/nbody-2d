@@ -1,4 +1,4 @@
-package dev.cgj.nbody2d.simulation;
+package dev.cgj.nbody2d.data;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
@@ -12,7 +12,7 @@ import java.awt.Color;
 @Builder
 @With
 @Jacksonized
-public class BodyState {
+public class Body {
 
     /**
      * Distance from the origin in meters.

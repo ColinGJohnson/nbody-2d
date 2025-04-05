@@ -2,6 +2,8 @@ package dev.cgj.nbody2d.simulation;
 
 import dev.cgj.nbody2d.config.InitialBodyConfig;
 import dev.cgj.nbody2d.config.SimulationConfig;
+import dev.cgj.nbody2d.data.Body;
+import dev.cgj.nbody2d.data.Vec2;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +18,17 @@ import java.util.TimerTask;
 @Slf4j
 public class Simulation {
 
+    /**
+     * Softening parameter (epsilon) determining the minimum distance between this body and another
+     * when calculating forces to avoid infinite forces at very short distances.
+     */
+    public static final double EPS = 3E4;
+
+    /**
+     * Universal gravitational constant.
+     */
+    public static final double G = 6.673e-11;
+
     @Getter
     private final SimulationConfig config;
 
@@ -23,12 +36,12 @@ public class Simulation {
     private long stepTime;
 
     /**
-     * An list of {@link Body} objects representing the bodies participating in the simulation.
+     * An list of {@link SimulationBody} objects representing the bodies participating in the simulation.
      * Each body tracks its position, velocity, and the forces acting upon it. These objects
      * are used to model the gravitational interactions between the bodies in the N-body simulation.
      */
     @Getter
-    private List<Body> bodies;
+    private List<SimulationBody> bodies;
 
     /**
      * The amount of simulated time that has passed so far (seconds).
@@ -66,7 +79,13 @@ public class Simulation {
 
         for (InitialBodyConfig init : config.getInitialState()) {
             for (int j = 0; j < init.getN(); j++) {
-                Body body = new Body(init.getX(), init.getY(), init.getMass(), init.getR(), init.getVx(), init.getVy());
+                SimulationBody body = new SimulationBody(Body.builder()
+                        .position(new Vec2(init.getX(), init.getY()))
+                        .velocity(new Vec2(init.getVx(), init.getVy()))
+                        .force(Vec2.ZERO)
+                        .radius(init.getR())
+                        .mass(init.getMass())
+                        .build());
                 randomizePosition(body, init.getPositionJitter());
                 bodies.add(body);
             }
@@ -76,7 +95,7 @@ public class Simulation {
     /**
      * Moves the given body in a random direction within 'limit' meters of its original position.
      */
-    public void randomizePosition(Body body, double limit) {
+    public void randomizePosition(SimulationBody body, double limit) {
         if (limit < 0) {
             throw new IllegalArgumentException("limit must be greater than or equal to 0");
         }
@@ -90,21 +109,21 @@ public class Simulation {
         double distance = Math.pow(Math.random(), 0.5) * limit;
 
         // calculate (x,y) coordinate of this point and assign to current body
-        body.state = body.state.withPosition(new Vec2(
+        body.setState(body.getState().withPosition(new Vec2(
                 Math.cos(angle) * distance,
                 Math.sin(angle) * distance)
-        );
+        ));
     }
 
     /**
-     * Get the maximum force acting on any {@link Body} in the simulation.
+     * Get the maximum force acting on any {@link SimulationBody} in the simulation.
      *
      * @return The maximum force in Newtons.
      */
     public double getMaxForce() {
         double maxForce = 0;
-        for (Body body : bodies) {
-            double currentForce = body.state.getForce().magnitude();
+        for (SimulationBody body : bodies) {
+            double currentForce = body.getState().getForce().magnitude();
             if (currentForce > maxForce) maxForce = currentForce;
         }
         return maxForce;
@@ -115,15 +134,15 @@ public class Simulation {
      */
     public void step() {
         long startTime = System.nanoTime();
-        List<Body> active = bodies.stream().filter(Body::isActive).toList();
+        List<SimulationBody> active = bodies.stream().filter(SimulationBody::isActive).toList();
 
         // update the forces acting on each body
-        for (Body body : active) {
+        for (SimulationBody body : active) {
             body.updateForces(active);
         }
 
         // update the positions and colors of each body
-        for (Body body : active) {
+        for (SimulationBody body : active) {
             body.updateVelocity(config.getDt());
             body.updateColor(getMaxForce());
             body.updatePosition(config.getDt());
