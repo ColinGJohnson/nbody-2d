@@ -269,7 +269,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
         // Normalize the force vector
         double forceMagnitude = body.state.getForce().magnitude();
         if (forceMagnitude != 0) {
-            Vec2 normalized = body.state.getForce().dividedBy(forceMagnitude);
+            Vec2 normalized = body.state.getForce().divide(forceMagnitude);
 
             // Calculate the endpoint of the vector
             int vectorLength = 20;

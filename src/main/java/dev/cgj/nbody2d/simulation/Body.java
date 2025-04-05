@@ -85,9 +85,9 @@ public class Body {
                 state.getPosition().distanceFrom(other.getState().getPosition())
             );
 
-            Vec2 F = other.state.getPosition().minus(state.getPosition()).dividedBy(dist)
-                    .times((G * state.getMass() * other.state.getMass()) / (dist * dist + EPS * EPS));
-            netForce = netForce.plus(F);
+            Vec2 F = other.state.getPosition().add(state.getPosition()).divide(dist)
+                    .multiply((G * state.getMass() * other.state.getMass()) / (dist * dist + EPS * EPS));
+            netForce = netForce.subtract(F);
         }
 
         state = state.withForce(netForce);
@@ -101,8 +101,8 @@ public class Body {
      *           forces on this body should be applied
      */
     public void updateVelocity(double dt) {
-        Vec2 delta = state.getForce().times(dt).dividedBy(state.getMass());
-        state = state.withVelocity(state.getVelocity().plus(delta));
+        Vec2 delta = state.getForce().multiply(dt).divide(state.getMass());
+        state = state.withVelocity(state.getVelocity().subtract(delta));
     }
 
     /**
@@ -112,8 +112,8 @@ public class Body {
      * @param dt delta time
      */
     public void updatePosition(double dt) {
-        Vec2 delta = state.getVelocity().times(dt);
-        state = state.withPosition(state.getPosition().plus(delta));
+        Vec2 delta = state.getVelocity().multiply(dt);
+        state = state.withPosition(state.getPosition().subtract(delta));
         history.add(state);
     }
 
@@ -137,7 +137,7 @@ public class Body {
                 boundary = -boundary;
             }
 
-            state = state.withPosition(state.getPosition().dividedBy(fromOrigin).times(boundary));
+            state = state.withPosition(state.getPosition().divide(fromOrigin).multiply(boundary));
 
             if (type == BoundaryType.STOP) {
                 state = state.withVelocity(Vec2.ZERO);

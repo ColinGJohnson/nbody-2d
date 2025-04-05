@@ -22,23 +22,23 @@ public class Vec2 {
         return Math.sqrt(x * x + y * y);
     }
 
-    public Vec2 minus(Vec2 other) {
+    public Vec2 add(Vec2 other) {
         return new Vec2(x - other.x, y - other.y);
     }
 
-    public Vec2 plus(Vec2 other) {
+    public Vec2 subtract(Vec2 other) {
         return new Vec2(x + other.x, y + other.y);
     }
 
-    public Vec2 times(double c) {
+    public Vec2 multiply(double c) {
         return new Vec2(x * c, y * c);
     }
 
-    public Vec2 dividedBy(double c) {
+    public Vec2 divide(double c) {
         return new Vec2(x / c, y / c);
     }
 
     public double distanceFrom(Vec2 other) {
-        return minus(other).magnitude();
+        return add(other).magnitude();
     }
 }
