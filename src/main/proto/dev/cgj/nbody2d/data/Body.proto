@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package dev.cgj.nbody2d.data;
+
+// Corresponds to dev.cgj.nbody2d.data.Vec2
+message Vec2 {
+  double x = 1;
+  double y = 2;
+}
+
+// Corresponds to dev.cgj.nbody2d.data.Body
+message Body {
+  Vec2 position = 1;
+  Vec2 velocity = 2;
+  Vec2 force = 3;
+  double radius = 4;
+  double mass = 5;
+}
