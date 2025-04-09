@@ -1,5 +1,6 @@
 package dev.cgj.nbody2d.data;
 
+import dev.cgj.nbody2d.protobuf.Body.Vec2Proto;
 import lombok.Builder;
 import lombok.With;
 import lombok.extern.jackson.Jacksonized;
@@ -37,5 +38,9 @@ public record Vec2(double x, double y) {
 
     public double distanceFrom(Vec2 other) {
         return add(other).magnitude();
+    }
+
+    public Vec2Proto proto() {
+        return Vec2Proto.newBuilder().setX(x).setY(y).build();
     }
 }

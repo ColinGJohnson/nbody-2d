@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package dev.cgj.nbody2d.protobuf;
+
+// Corresponds to dev.cgj.nbody2d.data.Vec2
+message Vec2Proto {
+  double x = 1;
+  double y = 2;
+}
+
+// Corresponds to dev.cgj.nbody2d.data.Body
+message BodyProto {
+  Vec2Proto position = 1;
+  Vec2Proto velocity = 2;
+  Vec2Proto force = 3;
+  double radius = 4;
+  double mass = 5;
+}
+
+message SimulationFrame {
+  repeated BodyProto bodies = 1;
+}
+
+message SimulationRecord {
+  repeated SimulationFrame frames = 1;
+}

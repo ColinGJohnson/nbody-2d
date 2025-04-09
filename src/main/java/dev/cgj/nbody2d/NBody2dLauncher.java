@@ -3,18 +3,21 @@ package dev.cgj.nbody2d;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import dev.cgj.nbody2d.config.Config;
+import dev.cgj.nbody2d.protobuf.Body.SimulationFrame;
+import dev.cgj.nbody2d.protobuf.Body.SimulationRecord;
 import dev.cgj.nbody2d.simulation.SimulationBody;
 import dev.cgj.nbody2d.data.Body;
 import dev.cgj.nbody2d.simulation.Simulation;
 import lombok.extern.slf4j.Slf4j;
 import picocli.CommandLine;
 
-import java.io.File;
+import java.io.OutputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static picocli.CommandLine.Command;
 import static picocli.CommandLine.Option;
@@ -70,10 +73,17 @@ public class NBody2dLauncher implements Runnable {
             history.add(sim.getBodies().stream().map(SimulationBody::getState).toList());
         }
 
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            File file = new File(outputPath);
-            mapper.writeValue(file, history);
+        List<SimulationFrame> frames = history.stream()
+            .map(frame -> SimulationFrame.newBuilder()
+                .addAllBodies(frame.stream().map(Body::proto).toList())
+                .build())
+            .toList();
+        SimulationRecord record = SimulationRecord.newBuilder()
+            .addAllFrames(frames)
+            .build();
+
+        try (OutputStream stream = Files.newOutputStream(Paths.get(outputPath))) {
+            record.writeTo(stream);
             log.info("Simulation results written to {}", outputPath);
         } catch (Exception e) {
             log.error("Failed to write simulation results to file", e);
@@ -96,7 +106,7 @@ public class NBody2dLauncher implements Runnable {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         try {
             URL resource = NBody2dLauncher.class.getClassLoader().getResource(name);
-            String configPath = resource.getPath();
+            String configPath = Objects.requireNonNull(resource).getPath();
             String configYaml = Files.readString(Paths.get(configPath));
             return mapper.readValue(configYaml, Config.class);
         } catch (Exception e) {

@@ -1,6 +1,7 @@
 package dev.cgj.nbody2d.data;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import dev.cgj.nbody2d.protobuf.Body.BodyProto;
 import lombok.Builder;
 import lombok.Value;
 import lombok.With;
@@ -44,4 +45,14 @@ public class Body {
      */
     @JsonIgnore
     Color color;
+
+    public BodyProto proto() {
+        return BodyProto.newBuilder()
+            .setPosition(getPosition().proto())
+            .setVelocity(getVelocity().proto())
+            .setForce(getForce().proto())
+            .setRadius(getRadius())
+            .setMass(getMass())
+            .build();
+    }
 }
