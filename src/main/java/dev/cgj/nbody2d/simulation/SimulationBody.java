@@ -66,7 +66,7 @@ public class SimulationBody {
             );
 
             Vec2 F = other.state.getPosition().add(state.getPosition()).divide(dist)
-                    .multiply((Simulation.G * state.getMass() * other.state.getMass()) / (dist * dist + Simulation.EPS * Simulation.EPS));
+                    .multiply((RealTimeSimulation.G * state.getMass() * other.state.getMass()) / (dist * dist + RealTimeSimulation.EPS * RealTimeSimulation.EPS));
             netForce = netForce.subtract(F);
         }
 

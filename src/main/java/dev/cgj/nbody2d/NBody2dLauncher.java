@@ -7,7 +7,7 @@ import dev.cgj.nbody2d.protobuf.Body.SimulationFrame;
 import dev.cgj.nbody2d.protobuf.Body.SimulationRecord;
 import dev.cgj.nbody2d.simulation.SimulationBody;
 import dev.cgj.nbody2d.data.Body;
-import dev.cgj.nbody2d.simulation.Simulation;
+import dev.cgj.nbody2d.simulation.RealTimeSimulation;
 import lombok.extern.slf4j.Slf4j;
 import picocli.CommandLine;
 
@@ -48,7 +48,7 @@ public class NBody2dLauncher implements Runnable {
         Config config = readConfiguration(configurationPath);
 
         // create and configure the simulation
-        Simulation sim = new Simulation(config.getSimulation());
+        RealTimeSimulation sim = new RealTimeSimulation(config.getSimulation());
         log.info("Created simulation with n={} bodies", sim.getBodies().size());
 
         // create a window to view the simulation state
@@ -59,12 +59,12 @@ public class NBody2dLauncher implements Runnable {
         }
     }
 
-    private void runGui(Config config, Simulation sim) {
+    private void runGui(Config config, RealTimeSimulation sim) {
         NBody2dViewer viewer = new NBody2dViewer(config.getViewer(), sim);
         viewer.run();
     }
 
-    private void runHeadless(Simulation sim) {
+    private void runHeadless(RealTimeSimulation sim) {
         log.info("Running simulation headless for {} steps", steps);
 
         List<List<Body>> history = new ArrayList<>();
@@ -88,10 +88,18 @@ public class NBody2dLauncher implements Runnable {
         } catch (Exception e) {
             log.error("Failed to write simulation results to file", e);
         }
+
+        ObjectMapper mapper = new ObjectMapper();
+        try (OutputStream stream = Files.newOutputStream(Paths.get("output.json"))) {
+            mapper.writeValue(stream, history);
+            log.info("Simulation results written to {}", outputPath);
+        } catch (Exception e) {
+            log.error("Failed to write simulation results to file", e);
+        }
     }
 
     /**
-     * Main method which creates and configures a {@link Simulation} simulation.
+     * Main method which creates and configures a {@link RealTimeSimulation} simulation.
      *
      * @param args if an integer is passed as an argument then it will determine the 'n' parameter.
      */

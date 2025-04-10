@@ -1,9 +1,11 @@
 package dev.cgj.nbody2d;
 
-import dev.cgj.nbody2d.simulation.SimulationBody;
 import dev.cgj.nbody2d.simulation.Simulation;
+import dev.cgj.nbody2d.simulation.SimulationBody;
+import dev.cgj.nbody2d.simulation.RealTimeSimulation;
 import dev.cgj.nbody2d.config.ViewerConfig;
 import dev.cgj.nbody2d.data.Vec2;
+import lombok.Getter;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -49,12 +51,23 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
     private final Point pan;            // the current x and y distance panned from the origin
 
     /**
+     * Timer for autoStep().
+     */
+    java.util.Timer timer;
+
+    /**
+     * True when the simulation is automatically calling step().
+     */
+    @Getter
+    boolean running;
+
+    /**
      * NBody2dViewer Constructor. Creates and configures display panel.
      *
      * @param config configuration for the viewer
      * @param sim the simulation to display
      */
-    public NBody2dViewer(ViewerConfig config, Simulation sim) {
+    public NBody2dViewer(ViewerConfig config, RealTimeSimulation sim) {
         super(true);
 
         this.config = config;
@@ -504,10 +517,10 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
             System.exit(0);
 
         } else if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-            if (sim.isRunning()) {
-                sim.stopAutoStep();
+            if (isRunning()) {
+                stopAutoStep();
             } else {
-                sim.autoStep(config.getAutoStepInterval());
+                autoStep(config.getAutoStepInterval());
             }
 
         } else if (e.getKeyCode() == KeyEvent.VK_DELETE) {
@@ -525,7 +538,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
             pan.x -= 20;
 
         } else if (e.getKeyCode() == KeyEvent.VK_R) {
-            sim.stopAutoStep();
+            stopAutoStep();
             sim.resetBodies();
 
         } else if (e.getKeyCode() == KeyEvent.VK_F) {
@@ -587,5 +600,34 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
         Point newCenter = simToPixels(x, y);
         pan.x += newCenter.x - center.x;
         pan.y -= newCenter.y - center.y;
+    }
+
+
+    /**
+     * Automatically step the simulation at a real-world time interval. Call stopAutoStep to stop
+     * this behavior.
+     *
+     * @param stepDelay the amount of time to wait between simulation steps.
+     */
+    public void autoStep(long stepDelay) {
+        stopAutoStep();
+        timer = new java.util.Timer();
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                sim.step();
+            }
+        }, 0, stepDelay);
+        running = true;
+    }
+
+    /**
+     * Stops the autoStep timer. If autoStep is not running, this method does nothing.
+     */
+    public void stopAutoStep() {
+        if (timer != null) {
+            timer.cancel();
+        }
+        running = false;
     }
 }
