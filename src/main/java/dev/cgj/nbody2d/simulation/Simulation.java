@@ -1,7 +1,5 @@
 package dev.cgj.nbody2d.simulation;
 
-import dev.cgj.nbody2d.config.SimulationConfig;
-
 import java.util.List;
 
 public interface Simulation {
@@ -17,14 +15,13 @@ public interface Simulation {
      */
     double G = 6.673e-11;
 
-
-    SimulationConfig getConfig();
-
-    List<SimulationBody> getBodies();
-
-    void resetBodies();
+    void reset();
 
     void step();
 
+    List<SimulationBody> getBodies();
+
     long getTimeElapsed();
+
+    double getBoundary();
 }

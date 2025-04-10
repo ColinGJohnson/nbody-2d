@@ -80,15 +80,6 @@ public class Viewer extends JPanel {
         });
     }
 
-    public void run() {
-        new java.util.Timer().scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                update();
-            }
-        }, 0, config.getRepaintInterval());
-    }
-
     /**
      * Creates and configures a new JFrame containing a single {@link Viewer}.
      *
@@ -127,7 +118,7 @@ public class Viewer extends JPanel {
      */
     public double getScaleToFit() {
         double constraint = Math.min(frame.getWidth(), frame.getHeight());
-        double boundary = sim.getConfig().getBoundary();
+        double boundary = sim.getBoundary();
         return (boundary * 2) / constraint;
     }
 
@@ -237,7 +228,7 @@ public class Viewer extends JPanel {
 
         // draw border circle
         Point center = simToPixels(0, 0);
-        drawCircle(g, center.x, center.y, distanceToPixels(sim.getConfig().getBoundary()));
+        drawCircle(g, center.x, center.y, distanceToPixels(sim.getBoundary()));
 
         for (SimulationBody body : sim.getBodies()) {
             Point location = simToPixels(body.getState().getPosition());
@@ -395,6 +386,15 @@ public class Viewer extends JPanel {
         Point newCenter = simToPixels(x, y);
         pan.x += newCenter.x - center.x;
         pan.y -= newCenter.y - center.y;
+    }
+
+    public void run() {
+        new java.util.Timer().scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                update();
+            }
+        }, 0, config.getRepaintInterval());
     }
 
     /**

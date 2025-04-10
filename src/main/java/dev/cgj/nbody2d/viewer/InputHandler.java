@@ -71,7 +71,7 @@ public class InputHandler implements MouseInputListener, MouseWheelListener, Key
 
         } else if (e.getKeyCode() == KeyEvent.VK_R) {
             viewer.stopAutoStep();
-            viewer.sim.resetBodies();
+            viewer.sim.reset();
 
         } else if (e.getKeyCode() == KeyEvent.VK_F) {
             viewer.forceVectors = !viewer.forceVectors;

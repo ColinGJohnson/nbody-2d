@@ -40,10 +40,10 @@ public class RealTimeSimulation implements Simulation {
      */
     public RealTimeSimulation(SimulationConfig config) {
         this.config = config;
-        resetBodies();
+        reset();
     }
 
-    public void resetBodies() {
+    public void reset() {
         int n = config.getInitialState().stream()
             .mapToInt(InitialBodyConfig::getN)
             .sum();
@@ -122,5 +122,10 @@ public class RealTimeSimulation implements Simulation {
         }
 
         timeElapsed += (long) config.getDt();
+    }
+
+    @Override
+    public double getBoundary() {
+        return config.getBoundary();
     }
 }
