@@ -8,6 +8,7 @@ import dev.cgj.nbody2d.protobuf.Body.SimulationRecord;
 import dev.cgj.nbody2d.simulation.SimulationBody;
 import dev.cgj.nbody2d.data.Body;
 import dev.cgj.nbody2d.simulation.RealTimeSimulation;
+import dev.cgj.nbody2d.viewer.Viewer;
 import lombok.extern.slf4j.Slf4j;
 import picocli.CommandLine;
 
@@ -60,7 +61,7 @@ public class NBody2dLauncher implements Runnable {
     }
 
     private void runGui(Config config, RealTimeSimulation sim) {
-        NBody2dViewer viewer = new NBody2dViewer(config.getViewer(), sim);
+        Viewer viewer = new Viewer(config.getViewer(), sim);
         viewer.run();
     }
 
