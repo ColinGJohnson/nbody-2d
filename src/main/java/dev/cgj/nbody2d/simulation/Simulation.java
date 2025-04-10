@@ -17,15 +17,14 @@ public interface Simulation {
      */
     double G = 6.673e-11;
 
+
     SimulationConfig getConfig();
 
     List<SimulationBody> getBodies();
 
-    void step();
-
     void resetBodies();
 
-    long getTimeElapsed();
+    void step();
 
-    long getStepTime();
+    long getTimeElapsed();
 }

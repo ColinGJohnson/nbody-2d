@@ -5,7 +5,6 @@ import dev.cgj.nbody2d.simulation.SimulationBody;
 import dev.cgj.nbody2d.simulation.RealTimeSimulation;
 import dev.cgj.nbody2d.config.ViewerConfig;
 import dev.cgj.nbody2d.data.Vec2;
-import lombok.Getter;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -58,8 +57,9 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
     /**
      * True when the simulation is automatically calling step().
      */
-    @Getter
-    boolean running;
+    private boolean running;
+
+    private long stepTime;
 
     /**
      * NBody2dViewer Constructor. Creates and configures display panel.
@@ -241,7 +241,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
         g.drawString("tracked particles: " + sim.getBodies().size(), 20, 40);
         g.drawString(String.format("scale: %.2e meters / pixel", scale), 20, 55);
         g.drawString("sim elapsed time: " + secondsToString(sim.getTimeElapsed()), 20, 70);
-        g.drawString("sim step time: " + Duration.ofNanos(sim.getStepTime()).toMillis() + "ms", 20, 85);
+        g.drawString("sim step time: " + Duration.ofNanos(stepTime).toMillis() + "ms", 20, 85);
         g.drawString("viewer frame time: " + Duration.ofNanos(frameTime).toMillis() + "ms", 20, 100);
 
         // draw border circle
@@ -517,7 +517,7 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
             System.exit(0);
 
         } else if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-            if (isRunning()) {
+            if (running) {
                 stopAutoStep();
             } else {
                 autoStep(config.getAutoStepInterval());
@@ -615,7 +615,11 @@ public class NBody2dViewer extends JPanel implements MouseInputListener, MouseWh
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
+                long startTime = System.nanoTime();
                 sim.step();
+
+                // Smooth measurement by averaging with previous
+                stepTime = (stepTime + (System.nanoTime() - startTime)) / 2;
             }
         }, 0, stepDelay);
         running = true;

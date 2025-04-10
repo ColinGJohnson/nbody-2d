@@ -20,8 +20,6 @@ public class RealTimeSimulation implements Simulation {
 
     private final SimulationConfig config;
 
-    private long stepTime;
-
     /**
      * An list of {@link SimulationBody} objects representing the bodies participating in the simulation.
      * Each body tracks its position, velocity, and the forces acting upon it. These objects
@@ -107,7 +105,6 @@ public class RealTimeSimulation implements Simulation {
      * Advances the simulation by one time step.
      */
     public void step() {
-        long startTime = System.nanoTime();
         List<SimulationBody> active = bodies.stream().filter(SimulationBody::isActive).toList();
 
         // update the forces acting on each body
@@ -124,10 +121,6 @@ public class RealTimeSimulation implements Simulation {
             body.applyBoundary(config.getBoundaryType(), config.getBoundary());
         }
 
-        // record the time elapsed
         timeElapsed += (long) config.getDt();
-
-        // Smooth measurement by averaging with previous
-        stepTime = (stepTime + (System.nanoTime() - startTime)) / 2;
     }
 }
