@@ -60,7 +60,7 @@ public class Viewer extends JPanel {
      * @param config configuration for the viewer
      * @param sim the simulation to display
      */
-    public Viewer(ViewerConfig config, RealTimeSimulation sim) {
+    public Viewer(ViewerConfig config, Simulation sim) {
         super(true);
         this.config = config;
         this.sim = sim;

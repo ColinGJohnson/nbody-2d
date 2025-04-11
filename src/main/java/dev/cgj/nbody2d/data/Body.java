@@ -45,14 +45,24 @@ public class Body {
      */
     @JsonIgnore
     Color color;
-
-    public BodyProto proto() {
+    
+    public BodyProto toProto() {
         return BodyProto.newBuilder()
-            .setPosition(getPosition().proto())
-            .setVelocity(getVelocity().proto())
-            .setForce(getForce().proto())
+            .setPosition(getPosition().toProto())
+            .setVelocity(getVelocity().toProto())
+            .setForce(getForce().toProto())
             .setRadius(getRadius())
             .setMass(getMass())
             .build();
+    }
+
+    public static Body fromProto(BodyProto proto) {
+        return Body.builder()
+                .position(Vec2.fromProto(proto.getPosition()))
+                .velocity(Vec2.fromProto(proto.getVelocity()))
+                .force(Vec2.fromProto(proto.getForce()))
+                .radius(proto.getRadius())
+                .mass(proto.getMass())
+                .build();
     }
 }

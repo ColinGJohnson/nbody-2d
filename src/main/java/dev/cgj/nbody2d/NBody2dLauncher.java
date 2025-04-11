@@ -3,8 +3,12 @@ package dev.cgj.nbody2d;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import dev.cgj.nbody2d.config.Config;
-import dev.cgj.nbody2d.protobuf.Body.SimulationFrame;
-import dev.cgj.nbody2d.protobuf.Body.SimulationRecord;
+import dev.cgj.nbody2d.config.ViewerConfig;
+import dev.cgj.nbody2d.data.RecordedSimulation;
+import dev.cgj.nbody2d.protobuf.Body.RecordedSimulationProto;
+import dev.cgj.nbody2d.protobuf.Body.SimulationFrameProto;
+import dev.cgj.nbody2d.simulation.ReplaySimulation;
+import dev.cgj.nbody2d.simulation.Simulation;
 import dev.cgj.nbody2d.simulation.SimulationBody;
 import dev.cgj.nbody2d.data.Body;
 import dev.cgj.nbody2d.simulation.RealTimeSimulation;
@@ -35,6 +39,10 @@ public class NBody2dLauncher implements Runnable {
             description = "Path where the simulation results will be written. Defaults to 'output.yml'.")
     String outputPath = "output.yml";
 
+    @Option(names = {"-i", "--input"},
+            description = "Input path for a precalculated simulation.")
+    String inputPath;
+
     @Option(names = {"--headless"},
             description = "Whether to run the simulation in headless mode (no GUI)")
     boolean headless = false;
@@ -48,20 +56,23 @@ public class NBody2dLauncher implements Runnable {
         log.info("Reading configuration from {}", configurationPath);
         Config config = readConfiguration(configurationPath);
 
-        // create and configure the simulation
-        RealTimeSimulation sim = new RealTimeSimulation(config.getSimulation());
-        log.info("Created simulation with n={} bodies", sim.getBodies().size());
+        if (inputPath == null) {
+            RealTimeSimulation sim = new RealTimeSimulation(config.getSimulation());
+            log.info("Created real time simulation with n={} bodies", sim.getBodies().size());
 
-        // create a window to view the simulation state
-        if (headless) {
-            runHeadless(sim);
+            if (headless) {
+                runHeadless(sim);
+            } else {
+                runViewer(config.getViewer(), sim);
+            }
         } else {
-            runGui(config, sim);
+            log.info("Replaying simulation from {}", inputPath);
+            runViewer(config.getViewer(), new ReplaySimulation(readRecordedSimulation(inputPath)));
         }
     }
 
-    private void runGui(Config config, RealTimeSimulation sim) {
-        Viewer viewer = new Viewer(config.getViewer(), sim);
+    private void runViewer(ViewerConfig config, Simulation simulation) {
+        Viewer viewer = new Viewer(config, simulation);
         viewer.run();
     }
 
@@ -74,25 +85,17 @@ public class NBody2dLauncher implements Runnable {
             history.add(sim.getBodies().stream().map(SimulationBody::getState).toList());
         }
 
-        List<SimulationFrame> frames = history.stream()
-            .map(frame -> SimulationFrame.newBuilder()
-                .addAllBodies(frame.stream().map(Body::proto).toList())
+        List<SimulationFrameProto> frames = history.stream()
+            .map(frame -> SimulationFrameProto.newBuilder()
+                .addAllBodies(frame.stream().map(Body::toProto).toList())
                 .build())
             .toList();
-        SimulationRecord record = SimulationRecord.newBuilder()
+        RecordedSimulationProto record = RecordedSimulationProto.newBuilder()
             .addAllFrames(frames)
             .build();
 
         try (OutputStream stream = Files.newOutputStream(Paths.get(outputPath))) {
             record.writeTo(stream);
-            log.info("Simulation results written to {}", outputPath);
-        } catch (Exception e) {
-            log.error("Failed to write simulation results to file", e);
-        }
-
-        ObjectMapper mapper = new ObjectMapper();
-        try (OutputStream stream = Files.newOutputStream(Paths.get("output.json"))) {
-            mapper.writeValue(stream, history);
             log.info("Simulation results written to {}", outputPath);
         } catch (Exception e) {
             log.error("Failed to write simulation results to file", e);
@@ -122,6 +125,16 @@ public class NBody2dLauncher implements Runnable {
             log.error("Failed to read configuration", e);
             System.exit(1);
             return null;
+        }
+    }
+
+    private static RecordedSimulation readRecordedSimulation(String inputPath) {
+        try {
+            byte[] data = Files.readAllBytes(Paths.get(inputPath));
+            return RecordedSimulation.fromProto(RecordedSimulationProto.parseFrom(data));
+        } catch (Exception e) {
+            log.error("Failed to read recorded simulation", e);
+            throw new RuntimeException(e);
         }
     }
 }

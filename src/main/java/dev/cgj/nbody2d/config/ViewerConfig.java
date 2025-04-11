@@ -8,6 +8,8 @@ import lombok.extern.jackson.Jacksonized;
 @Builder
 @Jacksonized
 public class ViewerConfig {
+
     long repaintInterval;
+
     long autoStepInterval;
 }

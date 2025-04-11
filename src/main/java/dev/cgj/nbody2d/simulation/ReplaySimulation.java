@@ -15,8 +15,8 @@ public class ReplaySimulation implements Simulation {
 
     @Override
     public List<SimulationBody> getBodies() {
-        SimulationFrame frame = recordedSimulation.getFrames().get(frameIndex);
-        return frame.getBodies().stream()
+        SimulationFrame frame = recordedSimulation.frames().get(frameIndex);
+        return frame.bodies().stream()
             .map(SimulationBody::new)
             .toList();
     }
@@ -28,7 +28,7 @@ public class ReplaySimulation implements Simulation {
 
     @Override
     public void step() {
-        frameIndex += 1;
+        frameIndex = Math.min(frameIndex + 1, recordedSimulation.frames().size());
     }
 
     @Override

@@ -40,7 +40,11 @@ public record Vec2(double x, double y) {
         return add(other).magnitude();
     }
 
-    public Vec2Proto proto() {
+    public Vec2Proto toProto() {
         return Vec2Proto.newBuilder().setX(x).setY(y).build();
+    }
+
+    public static Vec2 fromProto(Vec2Proto position) {
+        return new Vec2(position.getX(), position.getY());
     }
 }

@@ -17,10 +17,12 @@ message BodyProto {
   double mass = 5;
 }
 
-message SimulationFrame {
+// Corresponds to dev.cgj.nbody2d.data.SimulationFrame
+message SimulationFrameProto {
   repeated BodyProto bodies = 1;
 }
 
-message SimulationRecord {
-  repeated SimulationFrame frames = 1;
+// Corresponds to dev.cgj.nbody2d.data.RecordedSimulation
+message RecordedSimulationProto {
+  repeated SimulationFrameProto frames = 1;
 }
