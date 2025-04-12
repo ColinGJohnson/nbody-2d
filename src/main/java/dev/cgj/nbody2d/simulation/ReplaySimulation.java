@@ -33,11 +33,11 @@ public class ReplaySimulation implements Simulation {
 
     @Override
     public long getTimeElapsed() {
-        return 0;
+        return (long)(frameIndex * recordedSimulation.config().getDt());
     }
 
     @Override
     public double getBoundary() {
-        return 0;
+        return recordedSimulation.config().getBoundary();
     }
 }

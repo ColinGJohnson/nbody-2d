@@ -92,6 +92,8 @@ public class NBody2dLauncher implements Runnable {
             .toList();
         RecordedSimulationProto record = RecordedSimulationProto.newBuilder()
             .addAllFrames(frames)
+            .setBoundary(sim.getConfig().getBoundary())
+            .setDt(sim.getConfig().getDt())
             .build();
 
         try (OutputStream stream = Files.newOutputStream(Paths.get(outputPath))) {

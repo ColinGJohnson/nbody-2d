@@ -2,7 +2,6 @@ package dev.cgj.nbody2d.viewer;
 
 import dev.cgj.nbody2d.simulation.Simulation;
 import dev.cgj.nbody2d.simulation.SimulationBody;
-import dev.cgj.nbody2d.simulation.RealTimeSimulation;
 import dev.cgj.nbody2d.config.ViewerConfig;
 import dev.cgj.nbody2d.data.Vec2;
 

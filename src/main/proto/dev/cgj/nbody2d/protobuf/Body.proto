@@ -25,4 +25,6 @@ message SimulationFrameProto {
 // Corresponds to dev.cgj.nbody2d.data.RecordedSimulation
 message RecordedSimulationProto {
   repeated SimulationFrameProto frames = 1;
+  double boundary = 2;
+  double dt = 3;
 }
