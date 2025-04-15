@@ -17,6 +17,10 @@ repositories {
     mavenCentral()
 }
 
+application {
+    mainClass.set("dev.cgj.nbody2d.NBody2dLauncher")
+}
+
 dependencies {
 
     // Command-line argument parsing
@@ -59,6 +63,17 @@ protobuf {
     }
 }
 
-tasks.test {
-    useJUnitPlatform()
+tasks {
+    test {
+        useJUnitPlatform()
+    }
+    jar {
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        manifest {
+            attributes["Main-Class"] = "dev.cgj.nbody2d.NBody2dLauncher"
+        }
+        from({
+            configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) }
+        })
+    }
 }
