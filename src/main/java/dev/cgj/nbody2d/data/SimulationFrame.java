@@ -11,4 +11,10 @@ public record SimulationFrame(List<Body> bodies) {
                 .toList();
         return new SimulationFrame(bodies);
     }
+
+    public SimulationFrameProto toProto() {
+        SimulationFrameProto.Builder builder = SimulationFrameProto.newBuilder();
+        builder.addAllBodies(bodies.stream().map(Body::toProto).toList());
+        return builder.build();
+    }
 }

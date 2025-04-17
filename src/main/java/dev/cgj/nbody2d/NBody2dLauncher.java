@@ -5,8 +5,8 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import dev.cgj.nbody2d.config.Config;
 import dev.cgj.nbody2d.config.ViewerConfig;
 import dev.cgj.nbody2d.data.RecordedSimulation;
+import dev.cgj.nbody2d.data.SimulationFrame;
 import dev.cgj.nbody2d.protobuf.Body.RecordedSimulationProto;
-import dev.cgj.nbody2d.protobuf.Body.SimulationFrameProto;
 import dev.cgj.nbody2d.simulation.ReplaySimulation;
 import dev.cgj.nbody2d.simulation.Simulation;
 import dev.cgj.nbody2d.simulation.SimulationBody;
@@ -79,22 +79,14 @@ public class NBody2dLauncher implements Runnable {
     private void runHeadless(RealTimeSimulation sim) {
         log.info("Running simulation headless for {} steps", steps);
 
-        List<List<Body>> history = new ArrayList<>();
+        List<SimulationFrame> frames = new ArrayList<>();
         for (int i = 0; i < steps; i++) {
             sim.step();
-            history.add(sim.getBodies().stream().map(SimulationBody::getState).toList());
+            List<Body> bodies = sim.getBodies().stream().map(SimulationBody::getState).toList();
+            frames.add(new SimulationFrame(bodies));
         }
 
-        List<SimulationFrameProto> frames = history.stream()
-            .map(frame -> SimulationFrameProto.newBuilder()
-                .addAllBodies(frame.stream().map(Body::toProto).toList())
-                .build())
-            .toList();
-        RecordedSimulationProto record = RecordedSimulationProto.newBuilder()
-            .addAllFrames(frames)
-            .setBoundary(sim.getConfig().getBoundary())
-            .setDt(sim.getConfig().getDt())
-            .build();
+        RecordedSimulationProto record = new RecordedSimulation(frames, sim.getConfig()).toProto();
 
         try (OutputStream stream = Files.newOutputStream(Paths.get(outputPath))) {
             record.writeTo(stream);

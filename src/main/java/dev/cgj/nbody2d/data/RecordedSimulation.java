@@ -16,4 +16,14 @@ public record RecordedSimulation(List<SimulationFrame> frames, SimulationConfig 
             .build();
         return new RecordedSimulation(frames, config);
     }
+
+    public RecordedSimulationProto toProto() {
+        return RecordedSimulationProto.newBuilder()
+            .addAllFrames(frames.stream()
+                .map(SimulationFrame::toProto)
+                .toList())
+            .setBoundary(config.getBoundary())
+            .setDt(config.getDt())
+            .build();
+    }
 }
