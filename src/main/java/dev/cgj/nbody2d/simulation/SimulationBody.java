@@ -98,6 +98,16 @@ public class SimulationBody {
     }
 
     /**
+     * Updates the current state of the body and appends the new state to the history.
+     *
+     * @param state The new state of the body to be set and recorded in history.
+     */
+    public void pushState(Body state) {
+        this.state = state;
+        history.add(state);
+    }
+
+    /**
      * If the body is more than {@code boundary} meters from the origin, place it on the boundary
      * and stop it.
      * 

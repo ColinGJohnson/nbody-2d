@@ -21,9 +21,8 @@ public class RealTimeSimulation implements Simulation {
     private final SimulationConfig config;
 
     /**
-     * An list of {@link SimulationBody} objects representing the bodies participating in the simulation.
-     * Each body tracks its position, velocity, and the forces acting upon it. These objects
-     * are used to model the gravitational interactions between the bodies in the N-body simulation.
+     * The bodies participating in the simulation. Each body tracks its position, velocity, and the
+     * forces acting upon it.
      */
     private List<SimulationBody> bodies;
 
