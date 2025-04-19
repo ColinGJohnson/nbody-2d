@@ -1,5 +1,6 @@
 package dev.cgj.nbody2d;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import dev.cgj.nbody2d.config.Config;
@@ -23,6 +24,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import static picocli.CommandLine.Command;
 import static picocli.CommandLine.Option;
@@ -33,7 +35,7 @@ public class NBody2dLauncher implements Runnable {
 
     @Option(names = {"-c", "--config"},
             description = "Path to the YAML configuration file. Defaults to 'uniform.yml'.")
-    String configurationPath = "uniform.yml";
+    String configurationPath = "examples/uniform.yml";
 
     @Option(names = {"-o", "--output"},
             description = "Path where the simulation results will be written. Defaults to 'output.yml'.")
@@ -106,19 +108,49 @@ public class NBody2dLauncher implements Runnable {
     }
 
     /**
-     * Reads YAML config file from resources and deserializes as {@link Config}.
+     * Reads and parses a configuration file from the specified path.
+     *
+     * <p>
+     *   This method attempts to load the configuration from the file system
+     *   or the classpath, parses it as a YAML file, and maps it to a Config object.
+     * </p>
+     *
+     * @param path the file path or classpath location of the YAML configuration file
+     * @return Config object from the give path.
+     * @throws RuntimeException if the configuration cannot be read or parsed.
      */
-    private static Config readConfiguration(String name) {
+    private static Config readConfiguration(String path) {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        return readFileSystemConfiguration(path)
+            .or(() -> readClasspathConfiguration(path))
+            .map(yaml -> {
+                try {
+                    return mapper.readValue(yaml, Config.class);
+                } catch (JsonProcessingException e) {
+                    log.warn("Failed to parse configuration", e);
+                }
+                return null;
+            })
+            .orElseThrow(() -> new RuntimeException("Failed to read configuration from " + path));
+    }
+
+    private static Optional<String> readFileSystemConfiguration(String path) {
+        try {
+            return Optional.of(Files.readString(Paths.get(path)));
+        } catch (Exception e) {
+            log.warn("Failed to read configuration from filesystem", e);
+            return Optional.empty();
+        }
+    }
+
+    private static Optional<String> readClasspathConfiguration(String name) {
         try {
             URL resource = NBody2dLauncher.class.getClassLoader().getResource(name);
             String configPath = Objects.requireNonNull(resource).getPath();
-            String configYaml = Files.readString(Paths.get(configPath));
-            return mapper.readValue(configYaml, Config.class);
+            return Optional.of(Files.readString(Paths.get(configPath)));
         } catch (Exception e) {
-            log.error("Failed to read configuration", e);
-            System.exit(1);
-            return null;
+            log.warn("Failed to read configuration from classpath", e);
+            return Optional.empty();
         }
     }
 

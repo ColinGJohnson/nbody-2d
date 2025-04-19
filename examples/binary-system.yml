@@ -3,7 +3,7 @@ viewer:
   autoStepInterval: 10
 
 simulation:
-  boundary: 1e11
+  boundary: 1.5e11
   dt: 3600
 
   initialState:
