@@ -16,8 +16,13 @@ public class ReplaySimulation implements Simulation {
     @Override
     public List<SimulationBody> getBodies() {
         SimulationFrame frame = recordedSimulation.frames().get(frameIndex);
+        double maxForce = frame.getMaxForce();
         return frame.bodies().stream()
-            .map(SimulationBody::new)
+            .map(body -> {
+                SimulationBody simulationBody = new SimulationBody(body);
+                simulationBody.updateColor(maxForce);
+                return simulationBody;
+            })
             .toList();
     }
 

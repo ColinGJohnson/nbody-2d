@@ -17,4 +17,18 @@ public record SimulationFrame(List<Body> bodies) {
         builder.addAllBodies(bodies.stream().map(Body::toProto).toList());
         return builder.build();
     }
+
+    /**
+     * Get the maximum force acting on any {@link Body} in this frame.
+     *
+     * @return The maximum force in Newtons.
+     */
+    public double getMaxForce() {
+        double maxForce = 0;
+        for (Body body : bodies()) {
+            double currentForce = body.getForce().magnitude();
+            if (currentForce > maxForce) maxForce = currentForce;
+        }
+        return maxForce;
+    }
 }
