@@ -9,3 +9,6 @@ out
 
 # MacOS
 .DS_Store
+
+# Recorded simulation output
+*.binpb
