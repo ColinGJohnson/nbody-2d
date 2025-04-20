@@ -36,6 +36,26 @@ public record Vec2(double x, double y) {
         return new Vec2(x / c, y / c);
     }
 
+    public Vec2 randomOffset(double limit) {
+        if (limit < 0) {
+            throw new IllegalArgumentException("limit must be greater than or equal to 0");
+        }
+
+        if (limit == 0) {
+            return this;
+        }
+
+        // pick a random angle in [0, 2pi) and a random distance in [0, boundary)
+        double angle = Math.random() * (2 * Math.PI);
+        double distance = Math.pow(Math.random(), 0.5) * limit;
+
+        // calculate (x,y) coordinate of this point and assign to current body
+        return new Vec2(
+            Math.cos(angle) * distance,
+            Math.sin(angle) * distance
+        );
+    }
+
     public double distanceFrom(Vec2 other) {
         return add(other).magnitude();
     }

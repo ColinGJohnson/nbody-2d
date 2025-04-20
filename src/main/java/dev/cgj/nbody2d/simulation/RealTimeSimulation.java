@@ -19,11 +19,6 @@ import java.util.List;
 public class RealTimeSimulation implements Simulation {
 
     private final SimulationConfig config;
-
-    /**
-     * The bodies participating in the simulation. Each body tracks its position, velocity, and the
-     * forces acting upon it.
-     */
     private List<SimulationBody> bodies;
 
     /**
@@ -32,11 +27,6 @@ public class RealTimeSimulation implements Simulation {
     @Setter
     private long timeElapsed;
 
-    /**
-     * NBody2d Constructor.
-     *
-     * @param config Simulation configuration including boundary, deta time, and initial bodies.
-     */
     public RealTimeSimulation(SimulationConfig config) {
         this.config = config;
         reset();
@@ -58,32 +48,34 @@ public class RealTimeSimulation implements Simulation {
                     .mass(init.getMass())
                     .build());
                 randomizePosition(body, init.getPositionJitter());
+                randomizeVelocity(body, init.getVelocityJitter());
                 bodies.add(body);
             }
         }
     }
 
     /**
-     * Moves the given body in a random direction within 'limit' meters of its original position.
+     * Randomizes the position of the given {@code SimulationBody} within a specified limit.
+     * The new position is calculated by applying a random offset to the current position of the body.
+     *
+     * @param body the {@code SimulationBody} whose position will be randomized
+     * @param limit the maximum magnitude of the random offset to be applied to the body's position
      */
     public void randomizePosition(SimulationBody body, double limit) {
-        if (limit < 0) {
-            throw new IllegalArgumentException("limit must be greater than or equal to 0");
-        }
+        Vec2 offsetPosition = body.getState().getPosition().randomOffset(limit);
+        body.setState(body.getState().withPosition(offsetPosition));
+    }
 
-        if (limit == 0) {
-            return;
-        }
-
-        // pick a random angle in [0, 2pi) and a random distance in [0, boundary)
-        double angle = Math.random() * (2 * Math.PI);
-        double distance = Math.pow(Math.random(), 0.5) * limit;
-
-        // calculate (x,y) coordinate of this point and assign to current body
-        body.setState(body.getState().withPosition(new Vec2(
-                Math.cos(angle) * distance,
-                Math.sin(angle) * distance)
-        ));
+    /**
+     * Randomizes the velocity of a given simulation body by applying a random offset
+     * within the specified limit.
+     *
+     * @param body the {@code SimulationBody} whose velocity will be randomized
+     * @param limit the maximum magnitude of the random offset to be applied to the body's velocity
+     */
+    public void randomizeVelocity(SimulationBody body, double limit) {
+        Vec2 offsetVelocity = body.getState().getVelocity().randomOffset(limit);
+        body.setState(body.getState().withVelocity(offsetVelocity));
     }
 
     /**
