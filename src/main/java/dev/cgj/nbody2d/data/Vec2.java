@@ -45,7 +45,7 @@ public record Vec2(double x, double y) {
             return this;
         }
 
-        // pick a random angle in [0, 2pi) and a random distance in [0, boundary)
+        // pick a random angle in [0, 2pi) and a random distance in [0, limit)
         double angle = Math.random() * (2 * Math.PI);
         double distance = Math.pow(Math.random(), 0.5) * limit;
 

@@ -33,8 +33,10 @@ simulation:
       vx: 20000
       vy: 0
       velocityJitter: 300
-      r: 1e3
-      mass: 1e22
+      r: 2e3
+      radiusJitter: 0.5e3
+      mass: 2e22
+      massJitter: 0.5e22
 
     - n: 500
       x: 0
@@ -43,5 +45,7 @@ simulation:
       vx: -20000
       vy: 0
       velocityJitter: 300
-      r: 1e3
-      mass: 1e22
+      r: 2e3
+      radiusJitter: 0.5e3
+      mass: 2e22
+      massJitter: 0.5e22

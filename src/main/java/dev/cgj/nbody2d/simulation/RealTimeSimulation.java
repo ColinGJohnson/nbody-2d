@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Brute-force 2-dimensional Newtonian Gravity n-body simulation.
@@ -41,41 +42,29 @@ public class RealTimeSimulation implements Simulation {
         for (InitialBodyConfig init : config.getInitialState()) {
             for (int j = 0; j < init.getN(); j++) {
                 SimulationBody body = new SimulationBody(Body.builder()
-                    .position(new Vec2(init.getX(), init.getY()))
-                    .velocity(new Vec2(init.getVx(), init.getVy()))
+                    .position(new Vec2(init.getX(), init.getY())
+                        .randomOffset(init.getPositionJitter()))
+                    .velocity(new Vec2(init.getVx(), init.getVy())
+                        .randomOffset(init.getVelocityJitter()))
                     .force(Vec2.ZERO)
-                    .radius(init.getR())
-                    .mass(init.getMass())
+                    .radius(applyJitter(init.getR(), init.getRadiusJitter()))
+                    .mass(applyJitter(init.getMass(), init.getMassJitter()))
                     .build());
-                randomizePosition(body, init.getPositionJitter());
-                randomizeVelocity(body, init.getVelocityJitter());
                 bodies.add(body);
             }
         }
     }
 
-    /**
-     * Randomizes the position of the given {@code SimulationBody} within a specified limit.
-     * The new position is calculated by applying a random offset to the current position of the body.
-     *
-     * @param body the {@code SimulationBody} whose position will be randomized
-     * @param limit the maximum magnitude of the random offset to be applied to the body's position
-     */
-    public void randomizePosition(SimulationBody body, double limit) {
-        Vec2 offsetPosition = body.getState().getPosition().randomOffset(limit);
-        body.setState(body.getState().withPosition(offsetPosition));
-    }
+    public double applyJitter(double value, double jitter) {
+        if (jitter == 0) {
+            return value;
+        }
 
-    /**
-     * Randomizes the velocity of a given simulation body by applying a random offset
-     * within the specified limit.
-     *
-     * @param body the {@code SimulationBody} whose velocity will be randomized
-     * @param limit the maximum magnitude of the random offset to be applied to the body's velocity
-     */
-    public void randomizeVelocity(SimulationBody body, double limit) {
-        Vec2 offsetVelocity = body.getState().getVelocity().randomOffset(limit);
-        body.setState(body.getState().withVelocity(offsetVelocity));
+        if (Math.abs(jitter) >= value) {
+            throw new IllegalArgumentException("Jitter must be less than value.");
+        }
+
+        return value + ThreadLocalRandom.current().nextDouble(-jitter, jitter);
     }
 
     /**

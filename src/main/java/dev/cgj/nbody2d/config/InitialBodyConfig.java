@@ -47,7 +47,8 @@ public class InitialBodyConfig {
     double r;
 
     /**
-     * Variation in initial radius. Applied similarly to {@link #positionJitter}.
+     * Variation in initial radius. When added to the simulation, the actual radius will be in the
+     * range {@code (r - radiusJitter, r + radiusJitter)}.
      */
     double radiusJitter;
 
@@ -55,4 +56,9 @@ public class InitialBodyConfig {
      * Initial mass for the body (in kilograms).
      */
     double mass;
+
+    /**
+     * Variation in initial mass. Applied similarily to {@link #radiusJitter}
+     */
+    double massJitter;
 }
