@@ -33,7 +33,7 @@ dependencies {
 
     // Logging
     implementation("org.slf4j:slf4j-api:2.0.9")
-    runtimeOnly("ch.qos.logback:logback-classic:1.4.12")
+    runtimeOnly("ch.qos.logback:logback-classic:1.5.13")
 
     // Unit tests
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
