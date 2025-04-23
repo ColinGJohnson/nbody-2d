@@ -1,6 +1,6 @@
 package dev.cgj.nbody2d.data;
 
-import dev.cgj.nbody2d.protobuf.Body.SimulationFrameProto;
+import dev.cgj.nbody2d.protobuf.Definition.SimulationFrameProto;
 
 import java.util.List;
 

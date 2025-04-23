@@ -3,7 +3,7 @@ package dev.cgj.nbody2d.data;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.cgj.nbody2d.config.SimulationConfig;
-import dev.cgj.nbody2d.protobuf.Body.RecordedSimulationProto;
+import dev.cgj.nbody2d.protobuf.Definition.RecordedSimulationProto;
 
 import java.util.List;
 

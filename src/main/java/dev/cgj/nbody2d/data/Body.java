@@ -1,7 +1,7 @@
 package dev.cgj.nbody2d.data;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import dev.cgj.nbody2d.protobuf.Body.BodyProto;
+import dev.cgj.nbody2d.protobuf.Definition.BodyProto;
 import lombok.Builder;
 import lombok.Value;
 import lombok.With;

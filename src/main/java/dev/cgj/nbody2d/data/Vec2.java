@@ -1,6 +1,6 @@
 package dev.cgj.nbody2d.data;
 
-import dev.cgj.nbody2d.protobuf.Body.Vec2Proto;
+import dev.cgj.nbody2d.protobuf.Definition.Vec2Proto;
 import lombok.Builder;
 import lombok.With;
 import lombok.extern.jackson.Jacksonized;

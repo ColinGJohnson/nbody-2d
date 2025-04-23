@@ -11,6 +11,7 @@ import java.util.List;
 @Jacksonized
 public class SimulationConfig {
 
+    @Builder.Default
     BoundaryType boundaryType = BoundaryType.STOP;
 
     /**

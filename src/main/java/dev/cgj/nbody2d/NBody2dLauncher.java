@@ -7,7 +7,7 @@ import dev.cgj.nbody2d.config.Config;
 import dev.cgj.nbody2d.config.ViewerConfig;
 import dev.cgj.nbody2d.data.RecordedSimulation;
 import dev.cgj.nbody2d.data.SimulationFrame;
-import dev.cgj.nbody2d.protobuf.Body.RecordedSimulationProto;
+import dev.cgj.nbody2d.protobuf.Definition.RecordedSimulationProto;
 import dev.cgj.nbody2d.simulation.ReplaySimulation;
 import dev.cgj.nbody2d.simulation.Simulation;
 import dev.cgj.nbody2d.simulation.SimulationBody;
