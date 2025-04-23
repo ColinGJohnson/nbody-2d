@@ -1,29 +1,28 @@
 package dev.cgj.nbody2d.data;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.cgj.nbody2d.config.SimulationConfig;
 import dev.cgj.nbody2d.protobuf.Body.RecordedSimulationProto;
 
 import java.util.List;
 
 public record RecordedSimulation(List<SimulationFrame> frames, SimulationConfig config) {
-    public static RecordedSimulation fromProto(RecordedSimulationProto proto) {
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+
+    public static RecordedSimulation fromProto(RecordedSimulationProto proto) throws JsonProcessingException {
         List<SimulationFrame> frames = proto.getFramesList().stream()
             .map(SimulationFrame::fromProto)
             .toList();
-        SimulationConfig config = SimulationConfig.builder()
-            .boundary(proto.getBoundary())
-            .dt(proto.getDt())
-            .build();
-        return new RecordedSimulation(frames, config);
+        return new RecordedSimulation(frames, MAPPER.readValue(proto.getConfigYaml(), SimulationConfig.class));
     }
 
-    public RecordedSimulationProto toProto() {
+    public RecordedSimulationProto toProto() throws JsonProcessingException {
         return RecordedSimulationProto.newBuilder()
             .addAllFrames(frames.stream()
                 .map(SimulationFrame::toProto)
                 .toList())
-            .setBoundary(config.getBoundary())
-            .setDt(config.getDt())
+            .setConfigYaml(MAPPER.writeValueAsString(config))
             .build();
     }
 }

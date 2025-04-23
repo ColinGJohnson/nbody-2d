@@ -17,6 +17,7 @@ import dev.cgj.nbody2d.viewer.Viewer;
 import lombok.extern.slf4j.Slf4j;
 import picocli.CommandLine;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URL;
 import java.nio.file.Files;
@@ -88,12 +89,12 @@ public class NBody2dLauncher implements Runnable {
             frames.add(new SimulationFrame(bodies));
         }
 
-        RecordedSimulationProto record = new RecordedSimulation(frames, sim.getConfig()).toProto();
+        RecordedSimulation record = new RecordedSimulation(frames, sim.getConfig());
 
         try (OutputStream stream = Files.newOutputStream(Paths.get(outputPath))) {
-            record.writeTo(stream);
+            record.toProto().writeTo(stream);
             log.info("Simulation results written to {}", outputPath);
-        } catch (Exception e) {
+        } catch (IOException e) {
             log.error("Failed to write simulation results to file", e);
         }
     }
