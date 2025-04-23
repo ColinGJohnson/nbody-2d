@@ -1,0 +1,45 @@
+viewer:
+  repaintInterval: 20
+  autoStepInterval: 20
+
+simulation:
+  boundary: 0.5e12 # Boundary size for the simulation
+  dt: 8400           # Time step in seconds (1 day)
+
+  initialState:
+
+    # Sun
+    - n: 1
+      x: 0
+      y: 0
+      vx: 0
+      vy: 0
+      r: 6.955e8 # Radius in meters
+      mass: 1.989e30 # Mass in kilograms
+
+    # planet 1
+    - n: 1
+      x: 0
+      y: -107.66e9 # 107.66 million km (distance from the Sun)
+      vx: -35020 # 35.02 km/s (orbital speed)
+      vy: 0
+      r: 6.0518e6 # Radius in meters
+      mass: 5.972e25 # Mass in kg
+
+    # planet 2
+    - n: 1
+      x: 0
+      y: 107.66e9 # 107.66 million km (distance from the Sun)
+      vx: 35020 # 35.02 km/s (orbital speed)
+      vy: 0
+      r: 6.0518e6 # Radius in meters
+      mass: 5.972e25 # Mass in kg
+
+    # planet 2 moon
+    - n: 1
+      x: 1e9
+      y: 107.66e9 # 107.66 million km (distance from the Sun)
+      vx: 35020 # 35.02 km/s (orbital speed)
+      vy: -1022
+      r: 1.737e6 # Radius in meters
+      mass: 7.347e20 # Mass in kg
