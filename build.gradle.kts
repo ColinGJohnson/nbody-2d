@@ -1,5 +1,8 @@
 import com.google.protobuf.gradle.*
 
+group = "dev.cgj"
+version = "1.0-SNAPSHOT"
+
 plugins {
     id("java")
     id("application")
@@ -9,9 +12,6 @@ plugins {
     // https://github.com/google/protobuf-gradle-plugin
     id("com.google.protobuf") version "0.9.5"
 }
-
-group = "org.example"
-version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
