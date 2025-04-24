@@ -36,7 +36,7 @@ public class ReplaySimulation implements Simulation {
 
     @Override
     public void step() {
-        frameIndex = Math.min(frameIndex + 1, recordedSimulation.frames().size());
+        frameIndex = (frameIndex + 1) % recordedSimulation.frames().size();
     }
 
     @Override
