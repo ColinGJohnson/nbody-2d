@@ -65,9 +65,9 @@ public class SimulationBody {
                 state.getPosition().distanceFrom(other.getState().getPosition())
             );
 
-            Vec2 F = other.state.getPosition().add(state.getPosition()).divide(dist)
+            Vec2 F = other.state.getPosition().subtract(state.getPosition()).divide(dist)
                     .multiply((RealTimeSimulation.G * state.getMass() * other.state.getMass()) / (dist * dist + RealTimeSimulation.EPS * RealTimeSimulation.EPS));
-            netForce = netForce.subtract(F);
+            netForce = netForce.add(F);
         }
 
         state = state.withForce(netForce);
@@ -82,7 +82,7 @@ public class SimulationBody {
      */
     public void updateVelocity(double dt) {
         Vec2 delta = state.getForce().multiply(dt).divide(state.getMass());
-        state = state.withVelocity(state.getVelocity().subtract(delta));
+        state = state.withVelocity(state.getVelocity().add(delta));
     }
 
     /**
@@ -93,7 +93,7 @@ public class SimulationBody {
      */
     public void updatePosition(double dt) {
         Vec2 delta = state.getVelocity().multiply(dt);
-        state = state.withPosition(state.getPosition().subtract(delta));
+        state = state.withPosition(state.getPosition().add(delta));
         history.add(state);
     }
 

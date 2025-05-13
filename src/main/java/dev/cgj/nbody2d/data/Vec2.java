@@ -20,11 +20,11 @@ public record Vec2(double x, double y) {
         return Math.sqrt(x * x + y * y);
     }
 
-    public Vec2 add(Vec2 other) {
+    public Vec2 subtract(Vec2 other) {
         return new Vec2(x - other.x, y - other.y);
     }
 
-    public Vec2 subtract(Vec2 other) {
+    public Vec2 add(Vec2 other) {
         return new Vec2(x + other.x, y + other.y);
     }
 
@@ -57,7 +57,7 @@ public record Vec2(double x, double y) {
     }
 
     public double distanceFrom(Vec2 other) {
-        return add(other).magnitude();
+        return subtract(other).magnitude();
     }
 
     public Vec2Proto toProto() {
