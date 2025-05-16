@@ -1,5 +1,6 @@
 package dev.cgj.nbody2d.viewer;
 
+import dev.cgj.nbody2d.data.Body;
 import dev.cgj.nbody2d.simulation.Simulation;
 import dev.cgj.nbody2d.simulation.SimulationBody;
 import dev.cgj.nbody2d.config.ViewerConfig;
@@ -25,9 +26,10 @@ import java.util.TimerTask;
  */
 public class Viewer extends JPanel {
     final ViewerConfig config;
+    final Simulation sim;       // the simulation being displayed
+    SimulationBody selection;
 
     long frameTime;             // how long it took to draw the last frame, in nanoseconds
-    final Simulation sim;       // the simulation being displayed
     JFrame frame;               // the frame that the simulation is displayed in
     boolean fullScreen = false; // is the viewer full screen currently?
     double scale;               // simulation meters per on-screen pixel
@@ -98,6 +100,11 @@ public class Viewer extends JPanel {
 
         frame.add(this);
         frame.setVisible(true);
+    }
+
+    public void selectClosest(Point point) {
+        Point2D.Double position = pixelsToSim(point);
+        selection = sim.nearestBody(new Vec2(position.x, position.y));
     }
 
     /**
@@ -247,8 +254,21 @@ public class Viewer extends JPanel {
             }
         }
 
+        // Draw a rectangle around the selected body, if one exists
+        if (selection != null) {
+            highlightBody(g, selection.getState());
+        }
+
         // Smooth measurement by averaging with previous
         frameTime = (frameTime + (System.nanoTime() - startTime)) / 2;
+    }
+
+    private void highlightBody(Graphics g, Body body) {
+        Point selected = simToPixels(body.getPosition());
+        int radius = distanceToPixels(body.getRadius());
+        if (radius < 1) radius = 1;
+        g.setColor(Color.GREEN);
+        g.drawRect(selected.x - radius, selected.y - radius, radius * 2, radius * 2);
     }
 
     /**
@@ -258,7 +278,7 @@ public class Viewer extends JPanel {
      * @param body the body for which to draw the force vector
      */
     private void drawForceVector(Graphics g, SimulationBody body) {
-        Point bodyLocation = simToPixels(body.getState().getPosition());;
+        Point bodyLocation = simToPixels(body.getState().getPosition());
 
         // Normalize the force vector
         double forceMagnitude = body.getState().getForce().magnitude();

@@ -22,12 +22,16 @@ public class InputHandler implements MouseInputListener, MouseWheelListener, Key
 
     @Override
     public void mousePressed(MouseEvent e) {
-        if (e.getButton() == MouseEvent.BUTTON1) {
+
+        // Right click or left click + ctrl for trackpad
+        if (e.getButton() == MouseEvent.BUTTON3 || e.isControlDown()) {
+            viewer.selectClosest(e.getLocationOnScreen());
+
+        // Left click
+        } else if (e.getButton() == MouseEvent.BUTTON1) {
             viewer.startPan();
             Cursor cursor = new Cursor(Cursor.MOVE_CURSOR);
             viewer.frame.setCursor(cursor);
-        } else if (e.getButton() == MouseEvent.BUTTON2) {
-            // TODO: Use to select a body for tracking
         }
     }
 
