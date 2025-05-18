@@ -3,13 +3,16 @@ viewer:
   autoStepInterval: 20
 
 simulation:
-  boundary: 1e10
+  boundary: 2e10
   dt: 3600
 
   initialState:
+    - n: 1
+      r: 7e7
+      mass: 1e28
+
     - n: 2000
       positionJitter: 1e10
-      velocityJitter: 0
+      velocityJitter: 20000
       r: 1e7
-      radiusJitter: 0
-      mass: 1e25
+      mass: 1e24
