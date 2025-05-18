@@ -16,7 +16,6 @@ import java.awt.Graphics2D;
 import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.geom.Path2D;
-import java.awt.geom.Point2D;
 import java.time.Duration;
 import java.util.TimerTask;
 
@@ -104,6 +103,10 @@ public class Viewer extends JPanel {
 
     public void selectClosest(Point point) {
         selection = sim.nearestBody(pixelsToSim(point));
+    }
+
+    public void clearSelection() {
+        selection = null;
     }
 
     /**
@@ -215,6 +218,10 @@ public class Viewer extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         long startTime = System.nanoTime();
+
+        if (selection != null) {
+            centerWindowOn(selection.getState().getPosition());
+        }
 
         // dark background
         g.setColor(new Color(30, 30, 30));
@@ -389,18 +396,9 @@ public class Viewer extends JPanel {
         pan.setLocation(panStart.x + dx, panStart.y + dy);
     }
 
-    /**
-     * TODO: this method might be broken
-     * Center the window around a certain location in the simulation.
-     *
-     * @param x x-coordinate of the point to center the window around.
-     * @param y y-coordinate of the point to center the window around.
-     */
-    void centerWindowOn(double x, double y) {
-        Point center = getScreenCenter();
-        Point newCenter = simToPixels(x, y);
-        pan.x += newCenter.x - center.x;
-        pan.y -= newCenter.y - center.y;
+    void centerWindowOn(Vec2 position) {
+        pan.x = (int) (-position.x() / scale);
+        pan.y = (int) (-position.y() / scale);
     }
 
     public void run() {

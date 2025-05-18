@@ -76,6 +76,7 @@ public class InputHandler implements MouseInputListener, MouseWheelListener, Key
 
         } else if (e.getKeyCode() == KeyEvent.VK_R) {
             viewer.stopAutoStep();
+            viewer.clearSelection();
             viewer.sim.reset();
 
         } else if (e.getKeyCode() == KeyEvent.VK_F) {
