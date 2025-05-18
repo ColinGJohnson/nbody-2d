@@ -17,6 +17,7 @@ import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.geom.Path2D;
 import java.time.Duration;
+import java.util.Optional;
 import java.util.TimerTask;
 
 /**
@@ -240,26 +241,26 @@ public class Viewer extends JPanel {
         drawCircle(g, center.x, center.y, distanceToPixels(sim.getBoundary()));
 
         for (SimulationBody body : sim.getBodies()) {
-            Point location = simToPixels(body.getState().getPosition());
+            Body state = body.getState();
+            Point location = simToPixels(state.getPosition());
 
-            g.setColor(body.getState().getColor());
-            int radius = distanceToPixels(body.getState().getRadius());
+            g.setColor(Optional.ofNullable(state.getColor()).orElse(Color.WHITE));
+            int radius = distanceToPixels(state.getRadius());
             if (radius < 1) radius = 1;
             drawCircle(g, location.x, location.y, radius);
 
             if (forceVectors) {
-                drawForceVector(g, body);
+                drawForceVector(g, state);
             }
 
             if (historyTrails) {
                 // Swing uses Graphics2D internally, so this downcast is safe
                 drawHistoryTrail((Graphics2D) g, body, colorTrails);
             }
-        }
 
-        // Draw a rectangle around the selected body, if one exists
-        if (selection != null) {
-            highlightBody(g, selection.getState());
+            if (selection == body) {
+                highlightBody(g, state);
+            }
         }
 
         // Smooth measurement by averaging with previous
@@ -280,13 +281,13 @@ public class Viewer extends JPanel {
      * @param g    the graphics context used for drawing
      * @param body the body for which to draw the force vector
      */
-    private void drawForceVector(Graphics g, SimulationBody body) {
-        Point bodyLocation = simToPixels(body.getState().getPosition());
+    private void drawForceVector(Graphics g, Body body) {
+        Point bodyLocation = simToPixels(body.getPosition());
 
         // Normalize the force vector
-        double forceMagnitude = body.getState().getForce().magnitude();
+        double forceMagnitude = body.getForce().magnitude();
         if (forceMagnitude != 0) {
-            Vec2 normalized = body.getState().getForce().divide(forceMagnitude);
+            Vec2 normalized = body.getForce().divide(forceMagnitude);
 
             // Calculate the endpoint of the vector
             int vectorLength = 20;
@@ -397,8 +398,8 @@ public class Viewer extends JPanel {
     }
 
     void centerWindowOn(Vec2 position) {
-        pan.x = (int) (-position.x() / scale);
-        pan.y = (int) (-position.y() / scale);
+        pan.x = -distanceToPixels(position.x());
+        pan.y = -distanceToPixels(position.y());
     }
 
     public void run() {
