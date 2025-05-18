@@ -3,9 +3,9 @@
 ![License](https://img.shields.io/github/license/ColinGJohnson/nbody-2d)
 ![Java Version](https://img.shields.io/badge/Java-21-blue)
 
-An [N-body simulation](https://en.wikipedia.org/wiki/N-body_simulation) which applies [universal gravitation](https://en.wikipedia.org/wiki/Newton%27s_law_of_universal_gravitation) 2d particles. 
+An [N-body simulation](https://en.wikipedia.org/wiki/N-body_simulation) which applies [universal gravitation](https://en.wikipedia.org/wiki/Newton%27s_law_of_universal_gravitation) to 2D particles. 
 
-Includes an interactive viewer for rendering real time and saved simulations, a headless/CLI mode to pre-render and save simulations in protobuf format, and config files to define start state and customize simulation behavior.
+Includes an interactive viewer for rendering real time and saved simulations, a headless/CLI mode to pre-render and save simulations in protobuf format, and config files to define start state.
 
 ![image](https://github.com/user-attachments/assets/0fec02e0-5486-4ed8-b904-848d8c94ceca)
 
