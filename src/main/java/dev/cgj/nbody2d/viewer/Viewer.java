@@ -38,10 +38,10 @@ public class Viewer extends JPanel {
     boolean colorTrails;        // should trails be colored?
     boolean forceVectors;       // should force vectors be rendered?
 
-    boolean isPanning = false;  // is the user currently panning? (right mouse button)
-    Point panStartMouse;        // mouse position at start of pan
-    Point panStart;             // pan position at start of pan
-    final Point pan;            // the current x and y distance panned from the origin
+    boolean isPanning = false;  // true if the user currently panning
+    Point panStartMouse;        // mouse position at start of pan, in pixels
+    Point panStart;             // pan position at start of pan, in pixels
+    final Point pan;            // the current x and y distance panned from the origin, in pixels
 
     /**
      * Timer for autoStep().
@@ -103,8 +103,7 @@ public class Viewer extends JPanel {
     }
 
     public void selectClosest(Point point) {
-        Point2D.Double position = pixelsToSim(point);
-        selection = sim.nearestBody(new Vec2(position.x, position.y));
+        selection = sim.nearestBody(pixelsToSim(point));
     }
 
     /**
@@ -169,19 +168,16 @@ public class Viewer extends JPanel {
     }
 
     /**
-     * Converts a pixel on the screen (relative to the top left of the window) to the
-     * simulation's coordinate system.
+     * Converts a pixel on the viewer window to the simulation's coordinate system.
      *
-     * @param pixelCoordinate the coordinate on the screen.
+     * @param pixel Pixel coordinate relative to the top left of the window.
      * @return A double point containing the coordinates in the simulation.
      */
-    Point2D.Double pixelsToSim(Point pixelCoordinate) {
+    Vec2 pixelsToSim(Point pixel) {
         Point screenCenter = getScreenCenter();
-
-        double simX = (pixelCoordinate.x - screenCenter.x - pan.x) * scale;
-        double simY = (screenCenter.y - pixelCoordinate.y + pan.y) * scale;
-
-        return new Point2D.Double(simX, simY);
+        double simX = (pixel.x - screenCenter.x - pan.x) * scale;
+        double simY = (pixel.y - screenCenter.y - pan.y) * scale;
+        return new Vec2(simX, simY);
     }
 
     /**

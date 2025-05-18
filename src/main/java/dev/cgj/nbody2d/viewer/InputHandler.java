@@ -1,5 +1,7 @@
 package dev.cgj.nbody2d.viewer;
 
+import dev.cgj.nbody2d.data.Vec2;
+
 import javax.swing.event.MouseInputListener;
 import java.awt.Cursor;
 import java.awt.event.KeyEvent;
@@ -7,7 +9,6 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
-import java.awt.geom.Point2D;
 
 /**
  * Handles input events (mouse and keyboard) for NBody2dViewer.
@@ -25,7 +26,7 @@ public class InputHandler implements MouseInputListener, MouseWheelListener, Key
 
         // Right click or left click + ctrl for trackpad
         if (e.getButton() == MouseEvent.BUTTON3 || e.isControlDown()) {
-            viewer.selectClosest(e.getLocationOnScreen());
+            viewer.selectClosest(e.getPoint());
 
         // Left click
         } else if (e.getButton() == MouseEvent.BUTTON1) {
@@ -95,7 +96,7 @@ public class InputHandler implements MouseInputListener, MouseWheelListener, Key
     public void mouseWheelMoved(MouseWheelEvent e) {
 
         // get the simulation coordinates under the mouse before changing the scale
-        Point2D.Double before = viewer.pixelsToSim(e.getPoint());
+        Vec2 before = viewer.pixelsToSim(e.getPoint());
 
         // modify the scale (zoom in or our with the mouse wheel)
         double rotation = e.getPreciseWheelRotation();
@@ -103,9 +104,9 @@ public class InputHandler implements MouseInputListener, MouseWheelListener, Key
         if (newScale > 0) viewer.scale = newScale;
 
         // update pan so that area being pointed to stays the same
-        Point2D.Double after = viewer.pixelsToSim(e.getPoint());
-        viewer.pan.x += viewer.distanceToPixels(after.x - before.x);
-        viewer.pan.y -= viewer.distanceToPixels(after.y - before.y);
+        Vec2 change = viewer.pixelsToSim(e.getPoint()).subtract(before);
+        viewer.pan.x += viewer.distanceToPixels(change.x());
+        viewer.pan.y += viewer.distanceToPixels(change.y());
     }
 
     @Override
