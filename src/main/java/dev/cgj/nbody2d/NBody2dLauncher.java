@@ -5,13 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import dev.cgj.nbody2d.config.Config;
 import dev.cgj.nbody2d.config.ViewerConfig;
-import dev.cgj.nbody2d.data.RecordedSimulation;
-import dev.cgj.nbody2d.data.SimulationFrame;
-import dev.cgj.nbody2d.protobuf.Definition.RecordedSimulationProto;
+import dev.cgj.nbody2d.data.SimulationHistory;
+import dev.cgj.nbody2d.protobuf.Definition.SimulationHistoryProto;
 import dev.cgj.nbody2d.simulation.ReplaySimulation;
 import dev.cgj.nbody2d.simulation.Simulation;
-import dev.cgj.nbody2d.simulation.SimulationBody;
-import dev.cgj.nbody2d.data.Body;
 import dev.cgj.nbody2d.simulation.RealTimeSimulation;
 import dev.cgj.nbody2d.viewer.Viewer;
 import lombok.extern.slf4j.Slf4j;
@@ -22,10 +19,7 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 import static picocli.CommandLine.Command;
 import static picocli.CommandLine.Option;
@@ -60,8 +54,8 @@ public class NBody2dLauncher implements Runnable {
         Config config = readConfiguration(configurationPath);
 
         if (inputPath == null) {
-            RealTimeSimulation sim = new RealTimeSimulation(config.getSimulation());
-            log.info("Created real time simulation with n={} bodies", sim.getBodies().size());
+            RealTimeSimulation sim = new RealTimeSimulation(config.getSimulation(), 20);
+            log.info("Created real time simulation with n={} bodies", sim.currentFrame().bodies().size());
 
             if (headless) {
                 runHeadless(sim);
@@ -82,14 +76,11 @@ public class NBody2dLauncher implements Runnable {
     private void runHeadless(RealTimeSimulation sim) {
         log.info("Running simulation headless for {} steps", steps);
 
-        List<SimulationFrame> frames = new ArrayList<>();
         for (int i = 0; i < steps; i++) {
             sim.step();
-            List<Body> bodies = sim.getBodies().stream().map(SimulationBody::getState).toList();
-            frames.add(new SimulationFrame(bodies));
         }
 
-        RecordedSimulation record = new RecordedSimulation(frames, sim.getConfig());
+        SimulationHistory record = new SimulationHistory(sim.getFrames().asList(), sim.getConfig());
 
         try (OutputStream stream = Files.newOutputStream(Paths.get(outputPath))) {
             record.toProto().writeTo(stream);
@@ -155,10 +146,10 @@ public class NBody2dLauncher implements Runnable {
         }
     }
 
-    private static RecordedSimulation readRecordedSimulation(String inputPath) {
+    private static SimulationHistory readRecordedSimulation(String inputPath) {
         try {
             byte[] data = Files.readAllBytes(Paths.get(inputPath));
-            return RecordedSimulation.fromProto(RecordedSimulationProto.parseFrom(data));
+            return SimulationHistory.fromProto(SimulationHistoryProto.parseFrom(data));
         } catch (Exception e) {
             log.error("Failed to read recorded simulation", e);
             throw new RuntimeException(e);

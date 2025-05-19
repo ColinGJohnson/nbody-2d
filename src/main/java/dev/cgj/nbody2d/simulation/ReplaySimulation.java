@@ -1,32 +1,31 @@
 package dev.cgj.nbody2d.simulation;
 
-import dev.cgj.nbody2d.data.RecordedSimulation;
+import dev.cgj.nbody2d.data.Body;
+import dev.cgj.nbody2d.data.SimulationHistory;
 import dev.cgj.nbody2d.data.SimulationFrame;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ReplaySimulation implements Simulation {
-    private final RecordedSimulation recordedSimulation;
-    private final List<SimulationBody> bodies;
+    private final SimulationHistory simulationHistory;
     private int frameIndex = 0;
 
-    public ReplaySimulation(RecordedSimulation recordedSimulation) {
-        this.recordedSimulation = recordedSimulation;
-        SimulationFrame frame = recordedSimulation.frames().getFirst();
-        bodies = frame.bodies().stream().map(SimulationBody::new).toList();
+    public ReplaySimulation(SimulationHistory simulationHistory) {
+        this.simulationHistory = simulationHistory;
     }
 
     @Override
-    public List<SimulationBody> getBodies() {
-        SimulationFrame frame = recordedSimulation.frames().get(frameIndex);
-        double maxForce = frame.getMaxForce();
+    public SimulationFrame currentFrame() {
+        return simulationHistory.frames().get(frameIndex);
+    }
 
-        for (int i = 0; i < frame.bodies().size(); i++) {
-            bodies.get(i).pushState(frame.bodies().get(i));
-            bodies.get(i).updateColor(maxForce);
-        }
-
-        return bodies;
+    @Override
+    public Map<String, List<Body>> getHistory() {
+        return simulationHistory.frames().stream()
+            .flatMap(frame -> frame.bodies().stream())
+            .collect(Collectors.groupingBy(Body::getId));
     }
 
     @Override
@@ -36,16 +35,16 @@ public class ReplaySimulation implements Simulation {
 
     @Override
     public void step() {
-        frameIndex = (frameIndex + 1) % recordedSimulation.frames().size();
+        frameIndex = (frameIndex + 1) % simulationHistory.frames().size();
     }
 
     @Override
     public long getTimeElapsed() {
-        return (long)(frameIndex * recordedSimulation.config().getDt());
+        return (long)(frameIndex * simulationHistory.config().getDt());
     }
 
     @Override
     public double getBoundary() {
-        return recordedSimulation.config().getBoundary();
+        return simulationHistory.config().getBoundary();
     }
 }

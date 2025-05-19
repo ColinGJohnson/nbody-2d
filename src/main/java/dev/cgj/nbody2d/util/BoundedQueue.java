@@ -1,9 +1,13 @@
 package dev.cgj.nbody2d.util;
 
+import lombok.Getter;
+
 import java.util.ArrayDeque;
+import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 
 public class BoundedQueue<T> {
     private final ArrayDeque<T> deque = new ArrayDeque<>();
@@ -14,6 +18,7 @@ public class BoundedQueue<T> {
      */
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
+    @Getter
     private final int maxSize;
 
     public BoundedQueue(int maxSize) {
@@ -33,21 +38,31 @@ public class BoundedQueue<T> {
     }
 
     public void enumerate(BiConsumer<Integer, T> f) {
-        lock.readLock().lock();
-        try {
+        withReadLock(() -> {
             int i = 0;
             for (T item : deque) {
                 f.accept(i++, item);
             }
-        } finally {
-            lock.readLock().unlock();
-        }
+            return null;
+        });
     }
 
     public int size() {
+        return withReadLock(deque::size);
+    }
+
+    public T peek() {
+        return withReadLock(deque::peekLast);
+    }
+
+    public List<T> asList() {
+        return withReadLock(() -> deque.stream().toList());
+    }
+
+    private <R> R withReadLock(Supplier<R> supplier) {
         lock.readLock().lock();
         try {
-            return deque.size();
+            return supplier.get();
         } finally {
             lock.readLock().unlock();
         }

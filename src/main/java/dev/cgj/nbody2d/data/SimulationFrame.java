@@ -3,6 +3,8 @@ package dev.cgj.nbody2d.data;
 import dev.cgj.nbody2d.protobuf.Definition.SimulationFrameProto;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 public record SimulationFrame(List<Body> bodies) {
     public static SimulationFrame fromProto(SimulationFrameProto proto) {
@@ -30,5 +32,11 @@ public record SimulationFrame(List<Body> bodies) {
             if (currentForce > maxForce) maxForce = currentForce;
         }
         return maxForce;
+    }
+
+    public Optional<Body> getById(String id) {
+        return bodies.stream()
+            .filter(body -> Objects.equals(body.getId(), id))
+            .findFirst();
     }
 }

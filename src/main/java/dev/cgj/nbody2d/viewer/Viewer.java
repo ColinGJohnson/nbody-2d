@@ -1,8 +1,8 @@
 package dev.cgj.nbody2d.viewer;
 
 import dev.cgj.nbody2d.data.Body;
+import dev.cgj.nbody2d.data.SimulationFrame;
 import dev.cgj.nbody2d.simulation.Simulation;
-import dev.cgj.nbody2d.simulation.SimulationBody;
 import dev.cgj.nbody2d.config.ViewerConfig;
 import dev.cgj.nbody2d.data.Vec2;
 
@@ -17,6 +17,8 @@ import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.geom.Path2D;
 import java.time.Duration;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.TimerTask;
 
@@ -27,7 +29,7 @@ import java.util.TimerTask;
 public class Viewer extends JPanel {
     final ViewerConfig config;
     final Simulation sim;       // the simulation being displayed
-    SimulationBody selection;
+    String selection;
 
     long frameTime;             // how long it took to draw the last frame, in nanoseconds
     JFrame frame;               // the frame that the simulation is displayed in
@@ -103,7 +105,7 @@ public class Viewer extends JPanel {
     }
 
     public void selectClosest(Point point) {
-        selection = sim.nearestBody(pixelsToSim(point));
+        selection = Simulation.nearestBody(sim, pixelsToSim(point)).getId();
     }
 
     public void clearSelection() {
@@ -220,9 +222,10 @@ public class Viewer extends JPanel {
         super.paintComponent(g);
         long startTime = System.nanoTime();
 
-        if (selection != null) {
-            centerWindowOn(selection.getState().getPosition());
-        }
+        // center window on selected body, if one exists
+        SimulationFrame currentFrame = sim.currentFrame();
+        Optional<Body> selectedBody = currentFrame.getById(selection);
+        selectedBody.ifPresent(body -> centerWindowOn(body.getPosition()));
 
         // dark background
         g.setColor(new Color(30, 30, 30));
@@ -230,7 +233,7 @@ public class Viewer extends JPanel {
 
         // draw debug info
         g.setColor(Color.WHITE);
-        g.drawString("tracked particles: " + sim.getBodies().size(), 20, 40);
+        g.drawString("tracked particles: " + sim.currentFrame().bodies().size(), 20, 40);
         g.drawString(String.format("scale: %.2e meters / pixel", scale), 20, 55);
         g.drawString("sim elapsed time: " + secondsToString(sim.getTimeElapsed()), 20, 70);
         g.drawString("sim step time: " + Duration.ofNanos(stepTime).toMillis() + "ms", 20, 85);
@@ -240,27 +243,26 @@ public class Viewer extends JPanel {
         Point center = simToPixels(0, 0);
         drawCircle(g, center.x, center.y, distanceToPixels(sim.getBoundary()));
 
-        for (SimulationBody body : sim.getBodies()) {
-            Body state = body.getState();
-            Point location = simToPixels(state.getPosition());
+        Map<String, List<Body>> history = sim.getHistory();
+        double maxForce = currentFrame.getMaxForce();
+        for (Body body : currentFrame.bodies()) {
+            Point location = simToPixels(body.getPosition());
 
-            g.setColor(Optional.ofNullable(state.getColor()).orElse(Color.WHITE));
-            int radius = distanceToPixels(state.getRadius());
+            g.setColor(getColor(body, maxForce));
+            int radius = distanceToPixels(body.getRadius());
             if (radius < 1) radius = 1;
             drawCircle(g, location.x, location.y, radius);
 
             if (forceVectors) {
-                drawForceVector(g, state);
+                drawForceVector(g, body);
             }
 
             if (historyTrails) {
                 // Swing uses Graphics2D internally, so this downcast is safe
-                drawHistoryTrail((Graphics2D) g, body, colorTrails);
+                drawHistoryTrail((Graphics2D) g, history.get(body.getId()), maxForce, colorTrails);
             }
 
-            if (selection == body) {
-                highlightBody(g, state);
-            }
+            selectedBody.ifPresent(selected -> highlightBody(g, selected));
         }
 
         // Smooth measurement by averaging with previous
@@ -304,14 +306,15 @@ public class Viewer extends JPanel {
      * Draws the historical positions of the body as a series of connected lines on the given
      * graphics context.
      *
-     * @param g    the graphics context used to draw the position history
-     * @param body the body whose position history is to be drawn
+     * @param g       the graphics context used to draw the position history
+     * @param history the position history to draw
      */
-    private void drawHistoryTrail(Graphics2D g, SimulationBody body, boolean color) {
+    private void drawHistoryTrail(Graphics2D g, List<Body> history, double maxForce, boolean color) {
         final int SEGMENT_LENGTH = 20;
         Path2D path = new Path2D.Double();
 
-        body.getHistory().enumerate((i, state) -> {
+        for (int i = 0; i < history.size(); i++) {
+            Body state = history.get(i);
             Point current = simToPixels(state.getPosition());
 
             if (i == 0) {
@@ -321,15 +324,15 @@ public class Viewer extends JPanel {
             }
 
             // Updating color + opacity for every history point is slow, so use 20 element segments
-            if (i % SEGMENT_LENGTH == 0 || i == body.getHistory().size() - 1) {
-                float opacity = i / (float) body.getHistory().size();
+            if (i % SEGMENT_LENGTH == 0 || i == history.size() - 1) {
+                float opacity = i / (float) history.size();
                 g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
-                g.setColor(color ? state.getColor() : Color.GRAY);
+                g.setColor(color ? getColor(state, maxForce) : Color.GRAY);
                 g.draw(path);
                 path.reset();
                 path.moveTo(current.x, current.y);
             }
-        });
+        }
     }
 
     /**
@@ -441,5 +444,24 @@ public class Viewer extends JPanel {
             timer.cancel();
         }
         running = false;
+    }
+
+    /**
+     * Updates the color of this body to match the current force acting on it. The color is
+     * assigned relative to a given limit. e.g. force 50% of the limit results in a color 50%
+     * through the range of HSB hues.
+     *
+     * @param maxForce The highest force being exerted on a body in the simulation.
+     */
+    public Color getColor(Body body, double maxForce) {
+        if (maxForce == 0) {
+            return Color.WHITE;
+        }
+
+        float h = 0.5f * (float)Math.pow((body.getForce().magnitude() / maxForce), 0.3);
+        float s = 0.7f;
+        float b = 1f;
+
+        return Color.getHSBColor(h, s, b);
     }
 }

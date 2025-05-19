@@ -10,11 +10,12 @@ message Vec2Proto {
 
 // Corresponds to dev.cgj.nbody2d.data.Body
 message BodyProto {
-  Vec2Proto position = 1;
-  Vec2Proto velocity = 2;
-  Vec2Proto force = 3;
-  double radius = 4;
-  double mass = 5;
+  string id = 1;
+  Vec2Proto position = 2;
+  Vec2Proto velocity = 3;
+  Vec2Proto force = 4;
+  double radius = 5;
+  double mass = 6;
 }
 
 // Corresponds to dev.cgj.nbody2d.data.SimulationFrame
@@ -22,8 +23,8 @@ message SimulationFrameProto {
   repeated BodyProto bodies = 1;
 }
 
-// Corresponds to dev.cgj.nbody2d.data.RecordedSimulation
-message RecordedSimulationProto {
+// Corresponds to dev.cgj.nbody2d.data.SimulationHistory
+message SimulationHistoryProto {
   repeated SimulationFrameProto frames = 1;
   string configYaml = 2;
 }

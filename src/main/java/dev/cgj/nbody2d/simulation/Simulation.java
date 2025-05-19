@@ -1,9 +1,12 @@
 package dev.cgj.nbody2d.simulation;
 
+import dev.cgj.nbody2d.data.Body;
+import dev.cgj.nbody2d.data.SimulationFrame;
 import dev.cgj.nbody2d.data.Vec2;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 public interface Simulation {
 
@@ -22,16 +25,18 @@ public interface Simulation {
 
     void step();
 
-    List<SimulationBody> getBodies();
+    SimulationFrame currentFrame();
+
+    Map<String, List<Body>> getHistory();
 
     long getTimeElapsed();
 
     double getBoundary();
 
-    default SimulationBody nearestBody(Vec2 position) {
-        return getBodies().stream()
+    static Body nearestBody(Simulation simulation, Vec2 position) {
+        return simulation.currentFrame().bodies().stream()
             .min(Comparator.comparingDouble(body ->
-                body.getState().getPosition().distanceFrom(position)))
-            .orElseThrow(() -> new IllegalStateException("Simulation contains "));
+                body.getPosition().distanceFrom(position)))
+            .orElseThrow(() -> new IllegalStateException("No nearby bodies exist"));
     }
 }

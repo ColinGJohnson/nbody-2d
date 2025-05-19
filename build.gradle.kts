@@ -39,6 +39,10 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 
+    testImplementation(platform("org.mockito:mockito-bom:5.17.0"))
+    testImplementation("org.mockito:mockito-core")
+    testImplementation("org.mockito:mockito-junit-jupiter")
+
     // Protocol Buffers
     implementation("com.google.protobuf:protobuf-java:4.30.2")
     implementation("io.grpc:grpc-stub:1.71.0")

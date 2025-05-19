@@ -1,83 +1,66 @@
 package dev.cgj.nbody2d.simulation;
 
 import dev.cgj.nbody2d.data.Body;
+import dev.cgj.nbody2d.data.SimulationFrame;
 import dev.cgj.nbody2d.data.Vec2;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 
+import static dev.cgj.nbody2d.simulation.Simulation.nearestBody;
+import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 public class SimulationTest {
 
+    @Mock
+    Simulation simulation;
+
     @Test
-    void nearestBody_returnsClosestBody_whenMultipleBodiesExist() {
-        Vec2 position = new Vec2(0, 0);
-        SimulationBody body1 = new SimulationBody(createBody(new Vec2(5, 5), 1.0));
-        SimulationBody body2 = new SimulationBody(createBody(new Vec2(2, 2), 2.0));
-        SimulationBody body3 = new SimulationBody(createBody(new Vec2(10, 10), 3.0));
-        Simulation simulation = new MockSimulation(List.of(body1, body2, body3));
+    void nearestBody_returnsClosestBody_multipleBodies() {
+        when(simulation.currentFrame()).thenReturn(new SimulationFrame(Arrays.asList(
+            createBody("1", new Vec2(5, 5), 1.0),
+            createBody("2", new Vec2(2, 2), 2.0),
+            createBody("3", new Vec2(10, 10), 3.0)
+        )));
 
-        SimulationBody result = simulation.nearestBody(position);
+        Body result = nearestBody(simulation, new Vec2(0, 0));
 
-        assertEquals(body2, result);
+        assertEquals("2", result.getId());
     }
 
     @Test
-    void nearestBody_returnsOnlyBody_whenSingleBodyExists() {
-        Vec2 position = new Vec2(0, 0);
-        SimulationBody body = new SimulationBody(createBody(new Vec2(3, 3), 1.0));
-        Simulation simulation = new MockSimulation(Collections.singletonList(body));
+    void nearestBody_returnsOnlyBody_singleBody() {
+        Body body = createBody("1", new Vec2(3, 3), 1.0);
+        when(simulation.currentFrame()).thenReturn(new SimulationFrame(singletonList(body)));
 
-        SimulationBody result = simulation.nearestBody(position);
+        Body result = nearestBody(simulation, Vec2.ZERO);
 
         assertEquals(body, result);
+
     }
 
     @Test
-    void nearestBody_throwsException_whenNoBodiesExist() {
-        Vec2 position = new Vec2(0, 0);
-        Simulation simulation = new MockSimulation(Collections.emptyList());
-
-        assertThrows(IllegalStateException.class, () -> simulation.nearestBody(position));
+    void nearestBody_throwsException_noBodies() {
+        when(simulation.currentFrame()).thenReturn(new SimulationFrame(Collections.emptyList()));
+        assertThrows(IllegalStateException.class, () -> nearestBody(simulation, Vec2.ZERO));
     }
 
-    private Body createBody(Vec2 position, double mass) {
+    private Body createBody(String id, Vec2 position, double mass) {
         return Body.builder()
+            .id(id)
             .position(position)
             .velocity(Vec2.ZERO)
             .force(Vec2.ZERO)
             .radius(1.0)
             .mass(mass)
             .build();
-    }
-
-    /**
-     * Mock implementation of the Simulation interface for testing purposes.
-     */
-    private record MockSimulation(List<SimulationBody> bodies) implements Simulation {
-
-        @Override
-        public List<SimulationBody> getBodies() {
-            return bodies;
-        }
-
-        @Override
-        public void reset() { }
-
-        @Override
-        public void step() { }
-
-        @Override
-        public long getTimeElapsed() {
-            return 0;
-        }
-
-        @Override
-        public double getBoundary() {
-            return 0;
-        }
     }
 }

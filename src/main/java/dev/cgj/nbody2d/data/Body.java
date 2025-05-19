@@ -1,19 +1,22 @@
 package dev.cgj.nbody2d.data;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import dev.cgj.nbody2d.protobuf.Definition.BodyProto;
 import lombok.Builder;
 import lombok.Value;
 import lombok.With;
 import lombok.extern.jackson.Jacksonized;
 
-import java.awt.Color;
-
 @Value
 @Builder
 @With
 @Jacksonized
 public class Body {
+
+    /**
+     * Unique ID for this body.
+     * Used to track a body across successive {@link SimulationFrame}.
+     */
+    String id;
 
     /**
      * Distance from the origin in meters.
@@ -41,13 +44,31 @@ public class Body {
     double mass;
 
     /**
-     * The color of this body (not used in calculations).
+     * Updates the velocity of this body given the forces currently acting on it. Does not affect
+     * position or forces.
+     *
+     * @param dt delta time; the length of time for which the acceleration produced by the current
+     *           forces on this body should be applied
      */
-    @JsonIgnore
-    Color color;
+    public Body updateVelocity(double dt) {
+        Vec2 delta = getForce().multiply(dt).divide(getMass());
+        return withVelocity(getVelocity().add(delta));
+    }
+
+    /**
+     * Updates the position of this body given the current velocity. Does not affect forces or
+     * velocity.
+     *
+     * @param dt delta time
+     */
+    public Body updatePosition(double dt) {
+        Vec2 delta = getVelocity().multiply(dt);
+        return withPosition(getPosition().add(delta));
+    }
     
     public BodyProto toProto() {
         return BodyProto.newBuilder()
+            .setId(getId())
             .setPosition(getPosition().toProto())
             .setVelocity(getVelocity().toProto())
             .setForce(getForce().toProto())
@@ -58,6 +79,7 @@ public class Body {
 
     public static Body fromProto(BodyProto proto) {
         return Body.builder()
+                .id(proto.getId())
                 .position(Vec2.fromProto(proto.getPosition()))
                 .velocity(Vec2.fromProto(proto.getVelocity()))
                 .force(Vec2.fromProto(proto.getForce()))
