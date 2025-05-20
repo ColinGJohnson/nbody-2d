@@ -237,18 +237,22 @@ public class Viewer extends JPanel {
         g.drawString(String.format("scale: %.2e meters / pixel", scale), 20, 55);
         g.drawString("sim elapsed time: " + secondsToString(sim.getTimeElapsed()), 20, 70);
         g.drawString("sim step time: " + Duration.ofNanos(stepTime).toMillis() + "ms", 20, 85);
-        g.drawString("viewer frame time: " + Duration.ofNanos(frameTime).toMillis() + "ms", 20, 100);
+        long frameTimeMillis = Duration.ofNanos(frameTime).toMillis();
+        long frameRate = millisecondsToFPS(frameTimeMillis);
+        g.drawString("viewer frame time: " + frameTimeMillis + "ms (" + frameRate + " FPS)", 20, 100);
 
         // draw border circle
         Point center = simToPixels(0, 0);
         drawCircle(g, center.x, center.y, distanceToPixels(sim.getBoundary()));
 
-        Map<String, List<Body>> history = sim.getHistory();
         double maxForce = currentFrame.getMaxForce();
+        double maxVelocity = currentFrame.getMaxVelocity();
+
+        Map<String, List<Body>> history = sim.getHistory();
         for (Body body : currentFrame.bodies()) {
             Point location = simToPixels(body.getPosition());
 
-            g.setColor(getColor(body, maxForce));
+            g.setColor(getColor(body, maxVelocity));
             int radius = distanceToPixels(body.getRadius());
             if (radius < 1) radius = 1;
             drawCircle(g, location.x, location.y, radius);
@@ -259,7 +263,7 @@ public class Viewer extends JPanel {
 
             if (historyTrails) {
                 // Swing uses Graphics2D internally, so this downcast is safe
-                drawHistoryTrail((Graphics2D) g, history.get(body.getId()), maxForce, colorTrails);
+                drawHistoryTrail((Graphics2D) g, history.get(body.getId()), maxVelocity, colorTrails);
             }
 
             selectedBody.ifPresent(selected -> highlightBody(g, selected));
@@ -267,6 +271,10 @@ public class Viewer extends JPanel {
 
         // Smooth measurement by averaging with previous
         frameTime = (frameTime + (System.nanoTime() - startTime)) / 2;
+    }
+
+    private long millisecondsToFPS(long frameTime) {
+        return Math.round(1000.0 / frameTime);
     }
 
     private void highlightBody(Graphics g, Body body) {
@@ -309,7 +317,7 @@ public class Viewer extends JPanel {
      * @param g       the graphics context used to draw the position history
      * @param history the position history to draw
      */
-    private void drawHistoryTrail(Graphics2D g, List<Body> history, double maxForce, boolean color) {
+    private void drawHistoryTrail(Graphics2D g, List<Body> history, double limit, boolean color) {
         final int SEGMENT_LENGTH = 20;
         Path2D path = new Path2D.Double();
 
@@ -327,7 +335,7 @@ public class Viewer extends JPanel {
             if (i % SEGMENT_LENGTH == 0 || i == history.size() - 1) {
                 float opacity = i / (float) history.size();
                 g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
-                g.setColor(color ? getColor(state, maxForce) : Color.GRAY);
+                g.setColor(color ? getColor(state, limit) : Color.GRAY);
                 g.draw(path);
                 path.reset();
                 path.moveTo(current.x, current.y);
@@ -451,14 +459,14 @@ public class Viewer extends JPanel {
      * assigned relative to a given limit. e.g. force 50% of the limit results in a color 50%
      * through the range of HSB hues.
      *
-     * @param maxForce The highest force being exerted on a body in the simulation.
+     * @param limit The highest force being exerted on a body in the simulation.
      */
-    public Color getColor(Body body, double maxForce) {
-        if (maxForce == 0) {
+    public Color getColor(Body body, double limit) {
+        if (limit == 0) {
             return Color.WHITE;
         }
 
-        float h = 0.5f * (float)Math.pow((body.getForce().magnitude() / maxForce), 0.3);
+        float h = 0.5f * (float)Math.pow((body.getVelocity().magnitude() / limit), 0.5);
         float s = 0.7f;
         float b = 1f;
 

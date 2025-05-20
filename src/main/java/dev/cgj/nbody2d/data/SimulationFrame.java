@@ -34,6 +34,20 @@ public record SimulationFrame(List<Body> bodies) {
         return maxForce;
     }
 
+    /**
+     * Get the maximum velocity of any {@link Body} in this frame.
+     *
+     * @return The maximum velocity in meters per second
+     */
+    public double getMaxVelocity() {
+        double maxVelocity = 0;
+        for (Body body : bodies()) {
+            double currentVelocity = body.getVelocity().magnitude();
+            if (currentVelocity > maxVelocity) maxVelocity = currentVelocity;
+        }
+        return maxVelocity;
+    }
+
     public Optional<Body> getById(String id) {
         return bodies.stream()
             .filter(body -> Objects.equals(body.getId(), id))
