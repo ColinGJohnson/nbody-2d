@@ -13,8 +13,8 @@ import lombok.extern.jackson.Jacksonized;
 public class Body {
 
     /**
-     * Unique ID for this body.
-     * Used to track a body across successive {@link SimulationFrame}.
+     * ID for this body. This must be unique within a {@link SimulationFrame}, but should match for
+     * the same body across successive frames.
      */
     String id;
 
@@ -64,6 +64,26 @@ public class Body {
     public Body updatePosition(double dt) {
         Vec2 delta = getVelocity().multiply(dt);
         return withPosition(getPosition().add(delta));
+    }
+
+    /**
+     * Determines whether this body overlaps with another body.
+     *
+     * @param other the other body to check for overlap
+     * @return true if the bodies overlap, false otherwise
+     */
+    public boolean overlapsWith(Body other) {
+        double distanceBetween = getPosition().distanceFrom(other.getPosition());
+        return distanceBetween <= getRadius() + other.getRadius();
+    }
+
+    /**
+     * Calculates the area of the circular body.
+     *
+     * @return the area of the body as a double, calculated as π * radius²
+     */
+    public double area() {
+        return Math.PI * Math.pow(getRadius(), 2);
     }
     
     public BodyProto toProto() {

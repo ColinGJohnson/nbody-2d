@@ -11,7 +11,13 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
@@ -80,20 +86,6 @@ public class RealTimeSimulation implements Simulation {
     }
 
     /**
-     * Get the maximum force acting on any {@link Body} in the simulation.
-     *
-     * @return The maximum force in Newtons.
-     */
-    public double getMaxForce() {
-        double maxForce = 0;
-        for (Body body : currentFrame().bodies()) {
-            double currentForce = body.getForce().magnitude();
-            if (currentForce > maxForce) maxForce = currentForce;
-        }
-        return maxForce;
-    }
-
-    /**
      * Advances the simulation by one time step.
      */
     @Override
@@ -105,8 +97,49 @@ public class RealTimeSimulation implements Simulation {
             .map(body -> body.updateVelocity(dt).updatePosition(dt))
             .map(body -> applyBoundary(body, config.getBoundaryType(), config.getBoundary()))
             .toList();
-        frames.add(new SimulationFrame(updatedBodies));
+        List<Body> mergedBodies = mergeOverlappingBodies(updatedBodies);
+        frames.add(new SimulationFrame(mergedBodies));
         timeElapsed += (long) dt;
+    }
+
+    private List<Body> mergeOverlappingBodies(List<Body> bodies) {
+        List<Body> result = new ArrayList<>();
+        Set<String> mergedIds = new HashSet<>();
+
+        for (int i = 0; i < bodies.size(); i++) {
+            Body body = bodies.get(i);
+
+            if (mergedIds.contains(body.getId())) {
+                continue;
+            }
+
+            double totalMass = body.getMass();
+            Vec2 weightedPosition = body.getPosition().multiply(body.getMass());
+            Vec2 weightedVelocity = body.getVelocity().multiply(body.getMass());
+
+            for (int j = i + 1; j < bodies.size(); j++) {
+                Body other = bodies.get(j);
+
+                if (body.overlapsWith(other)) {
+                    totalMass += other.getMass();
+                    weightedPosition = weightedPosition.add(other.getPosition().multiply(other.getMass()));
+                    weightedVelocity = weightedVelocity.add(other.getVelocity().multiply(other.getMass()));
+                    mergedIds.add(other.getId());
+                }
+            }
+
+            Vec2 finalPosition = weightedPosition.divide(totalMass);
+            Vec2 finalVelocity = weightedVelocity.divide(totalMass);
+
+            result.add(body
+                .withPosition(finalPosition)
+                .withVelocity(finalVelocity)
+                .withMass(totalMass)
+            );
+            mergedIds.add(body.getId());
+        }
+
+        return result;
     }
 
     @Override
@@ -142,7 +175,6 @@ public class RealTimeSimulation implements Simulation {
             if (Objects.equals(body.getId(), other.getId())) {
                 continue;
             }
-
 
             Vec2 F = calculateGravitationalForce(body, other);
             netForce = netForce.add(F);
