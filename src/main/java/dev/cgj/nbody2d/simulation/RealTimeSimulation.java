@@ -116,6 +116,7 @@ public class RealTimeSimulation implements Simulation {
             }
 
             double totalMass = body.getMass();
+            double totalArea = body.area();
             Vec2 weightedPosition = body.getPosition().multiply(body.getMass());
             Vec2 weightedVelocity = body.getVelocity().multiply(body.getMass());
 
@@ -124,19 +125,18 @@ public class RealTimeSimulation implements Simulation {
 
                 if (body.overlapsWith(other)) {
                     totalMass += other.getMass();
+                    totalArea += other.area();
                     weightedPosition = weightedPosition.add(other.getPosition().multiply(other.getMass()));
                     weightedVelocity = weightedVelocity.add(other.getVelocity().multiply(other.getMass()));
                     mergedIds.add(other.getId());
                 }
             }
 
-            Vec2 finalPosition = weightedPosition.divide(totalMass);
-            Vec2 finalVelocity = weightedVelocity.divide(totalMass);
-
             result.add(body
-                .withPosition(finalPosition)
-                .withVelocity(finalVelocity)
+                .withPosition(weightedPosition.divide(totalMass))
+                .withVelocity(weightedVelocity.divide(totalMass))
                 .withMass(totalMass)
+                .withRadius(Math.sqrt(totalArea / Math.PI))
             );
             mergedIds.add(body.getId());
         }
