@@ -108,7 +108,12 @@ public class Viewer extends JPanel {
     }
 
     public void selectClosest(Point point) {
-        selection = Simulation.nearestBody(sim, pixelsToSim(point)).getId();
+        String nearest = Simulation.nearestBody(sim, pixelsToSim(point)).getId();
+        if (Objects.equals(selection, nearest)) {
+            clearSelection();
+        } else {
+            selection = nearest;
+        }
     }
 
     public void clearSelection() {
