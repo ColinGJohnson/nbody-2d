@@ -59,6 +59,10 @@ public class BoundedQueue<T> {
         return withReadLock(() -> deque.stream().toList());
     }
 
+    public List<T> asList(int limit) {
+        return withReadLock(() -> deque.stream().limit(limit).toList());
+    }
+
     private <R> R withReadLock(Supplier<R> supplier) {
         lock.readLock().lock();
         try {

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import dev.cgj.nbody2d.config.Config;
+import dev.cgj.nbody2d.config.SimulationConfig;
 import dev.cgj.nbody2d.config.ViewerConfig;
 import dev.cgj.nbody2d.data.SimulationHistory;
 import dev.cgj.nbody2d.protobuf.Definition.SimulationHistoryProto;
@@ -54,9 +55,8 @@ public class NBody2dLauncher implements Runnable {
         Config config = readConfiguration(configurationPath);
 
         if (inputPath == null) {
-            RealTimeSimulation sim = new RealTimeSimulation(config.getSimulation(), 20);
-            log.info("Created real time simulation with n={} bodies", sim.currentFrame().bodies().size());
-
+            SimulationConfig simulationConfig = config.getSimulation();
+            RealTimeSimulation sim = new RealTimeSimulation(simulationConfig, headless ? steps: 20);
             if (headless) {
                 runHeadless(sim);
             } else {

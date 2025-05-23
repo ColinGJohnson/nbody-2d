@@ -50,6 +50,8 @@ public class RealTimeSimulation implements Simulation {
         int n = config.getInitialState().stream()
             .mapToInt(InitialBodyConfig::getN)
             .sum();
+
+        log.info("Creating real time simulation with n={} bodies", n);
         inactiveBodiesIds = new HashSet<>(n);
         List<Body> bodies = new ArrayList<>(n);
 
@@ -148,8 +150,9 @@ public class RealTimeSimulation implements Simulation {
     }
 
     @Override
-    public Map<String, List<Body>> getHistory() {
-        return frames.asList().stream()
+    public Map<String, List<Body>> getHistory(int n) {
+        return frames.asList(n)
+            .stream()
             .flatMap(frame -> frame.bodies().stream())
             .collect(Collectors.groupingBy(Body::getId));
     }

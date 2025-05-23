@@ -27,7 +27,7 @@ public interface Simulation {
 
     SimulationFrame currentFrame();
 
-    Map<String, List<Body>> getHistory();
+    Map<String, List<Body>> getHistory(int n);
 
     long getTimeElapsed();
 

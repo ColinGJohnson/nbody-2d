@@ -22,8 +22,10 @@ public class ReplaySimulation implements Simulation {
     }
 
     @Override
-    public Map<String, List<Body>> getHistory() {
-        return simulationHistory.frames().stream()
+    public Map<String, List<Body>> getHistory(int n) {
+        return simulationHistory.frames()
+            .subList(Math.max(0, frameIndex - n), frameIndex + 1)
+            .stream()
             .flatMap(frame -> frame.bodies().stream())
             .collect(Collectors.groupingBy(Body::getId));
     }

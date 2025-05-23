@@ -19,6 +19,7 @@ import java.awt.geom.Path2D;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.TimerTask;
 
@@ -27,6 +28,8 @@ import java.util.TimerTask;
  * will be created immediately upon instantiation.
  */
 public class Viewer extends JPanel {
+    private static final int TRAIL_LENGTH = 50;
+
     final ViewerConfig config;
     final Simulation sim;       // the simulation being displayed
     String selection;
@@ -248,7 +251,7 @@ public class Viewer extends JPanel {
         double maxForce = currentFrame.getMaxForce();
         double maxVelocity = currentFrame.getMaxVelocity();
 
-        Map<String, List<Body>> history = sim.getHistory();
+        Map<String, List<Body>> history = sim.getHistory(TRAIL_LENGTH);
         for (Body body : currentFrame.bodies()) {
             Point location = simToPixels(body.getPosition());
 
@@ -274,7 +277,7 @@ public class Viewer extends JPanel {
     }
 
     private long millisecondsToFPS(long frameTime) {
-        return Math.round(1000.0 / frameTime);
+        return Math.round(1000.0 / (float)frameTime);
     }
 
     private void highlightBody(Graphics g, Body body) {
