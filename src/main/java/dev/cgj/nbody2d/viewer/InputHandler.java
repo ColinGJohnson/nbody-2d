@@ -80,13 +80,13 @@ public class InputHandler implements MouseInputListener, MouseWheelListener, Key
             viewer.sim.reset();
 
         } else if (e.getKeyCode() == KeyEvent.VK_F) {
-            viewer.forceVectors = !viewer.forceVectors;
+            viewer.getConfig().setShowForceVectors(!viewer.getConfig().isShowForceVectors());
 
         } else if (e.getKeyCode() == KeyEvent.VK_C) {
-            viewer.colorTrails = !viewer.colorTrails;
+            viewer.getConfig().setColorTrails(!viewer.getConfig().isColorTrails());
 
         } else if (e.getKeyCode() == KeyEvent.VK_T) {
-            viewer.historyTrails = !viewer.historyTrails;
+            viewer.getConfig().setShowTrails(!viewer.getConfig().isShowTrails());
 
         } else if (e.getKeyCode() == KeyEvent.VK_F11) {
             viewer.toggleFullScreen();

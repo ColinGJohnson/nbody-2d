@@ -5,6 +5,8 @@ import dev.cgj.nbody2d.data.SimulationFrame;
 import dev.cgj.nbody2d.simulation.Simulation;
 import dev.cgj.nbody2d.config.ViewerConfig;
 import dev.cgj.nbody2d.data.Vec2;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -30,18 +32,17 @@ import java.util.TimerTask;
 public class Viewer extends JPanel {
     private static final int TRAIL_LENGTH = 50;
 
-    final ViewerConfig config;
-    final Simulation sim;       // the simulation being displayed
+    /**
+     * The simulation being displayed.
+     */
+    final Simulation sim;
+    @Getter @Setter ViewerConfig config;
     String selection;
 
     long frameTime;             // how long it took to draw the last frame, in nanoseconds
     JFrame frame;               // the frame that the simulation is displayed in
     boolean fullScreen = false; // is the viewer full screen currently?
     double scale;               // simulation meters per on-screen pixel
-
-    boolean historyTrails;      // should trails be drawn?
-    boolean colorTrails;        // should trails be colored?
-    boolean forceVectors;       // should force vectors be rendered?
 
     boolean isPanning = false;  // true if the user currently panning
     Point panStartMouse;        // mouse position at start of pan, in pixels
@@ -265,13 +266,13 @@ public class Viewer extends JPanel {
             if (radius < 1) radius = 1;
             drawCircle(g, location.x, location.y, radius);
 
-            if (forceVectors) {
+            if (config.isShowForceVectors()) {
                 drawForceVector(g, body);
             }
 
-            if (historyTrails) {
+            if (config.isShowTrails()) {
                 // Swing uses Graphics2D internally, so this downcast is safe
-                drawHistoryTrail((Graphics2D) g, history.get(body.getId()), maxVelocity, colorTrails);
+                drawHistoryTrail((Graphics2D) g, history.get(body.getId()), maxVelocity, config.isColorTrails());
             }
 
             selectedBody.ifPresent(selected -> highlightBody(g, selected));

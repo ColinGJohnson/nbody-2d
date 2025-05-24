@@ -12,7 +12,7 @@ import java.util.List;
 public class SimulationConfig {
 
     @Builder.Default
-    BoundaryType boundaryType = BoundaryType.STOP;
+    BoundaryType boundaryType = BoundaryType.WRAP;
 
     /**
      * The edge of this simulation's universe.
