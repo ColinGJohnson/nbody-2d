@@ -2,6 +2,7 @@
 
 ![License](https://img.shields.io/github/license/ColinGJohnson/nbody-2d)
 ![Java Version](https://img.shields.io/badge/Java-21-blue)
+![Build status](https://github.com/ColinGJohnson/nbody-2d/actions/workflows/gradle.yml/badge.svg)
 
 An [N-body simulation](https://en.wikipedia.org/wiki/N-body_simulation) which applies [universal gravitation](https://en.wikipedia.org/wiki/Newton%27s_law_of_universal_gravitation) to 2D particles. 
 
